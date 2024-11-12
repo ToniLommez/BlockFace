@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
-	"io"
 	"math/big"
 	"time"
 )
@@ -72,7 +71,7 @@ func (b *Block) computeSize() {
 	hash := CIPHER_SIZE
 	signature := SIGNATURE_SIZE
 	pubKey := PUBLIC_KEY_SIZE
-	data := int(b.Data.Count) * (CIPHER_SIZE + 8)
+	data := int(b.Data.Count) * STORAGE_LOCATION_SIZE
 
 	b.BlockSize = uint64(blockSize + index + timestamp + prevHash + hash + signature + pubKey + data)
 }
@@ -113,12 +112,12 @@ func Deserialize(data []byte) *Block {
 	buf.Read(b.PubKey[:])
 
 	// Data
-	b.Data.Deserialize(data[buf.Size()-int64(buf.Len()):])
+	b.Data.Deserialize(data[len(data)-buf.Len():])
 
 	return &b
 }
 
-func NewBlock(oldBlock Block, k Key, data DataSet) (*Block, error) {
+func NewBlock(oldBlock *Block, k Key, data DataSet) (*Block, error) {
 	newBlock := &Block{
 		BlockSize: 0,
 		Index:     oldBlock.Index + 1,
@@ -140,17 +139,16 @@ func NewBlock(oldBlock Block, k Key, data DataSet) (*Block, error) {
 }
 
 // NewGenesis generate the first block with a secure random for it's hash
-func NewGenesis(k Key) *Block {
+func NewGenesis(k Key, genesisHash Hash) *Block {
 	genesis := &Block{
 		BlockSize: 0,
 		Index:     0,
 		Timestamp: uint64(time.Now().Unix()),
-		PrevHash:  Hash{},
+		PrevHash:  genesisHash,
 		PubKey:    k.Pk,
 		Data:      DataSet{},
 	}
 
-	io.ReadFull(rand.Reader, genesis.PrevHash[:])
 	genesis.calculateHash()
 
 	if genesis.sign(k.Sk) != nil {
