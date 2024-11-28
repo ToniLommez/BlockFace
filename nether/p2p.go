@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -60,11 +61,11 @@ func handleConnection(conn net.Conn, isReceiver bool) {
 	var name string
 
 	if isReceiver {
-		name = readMessage(conn)
+		name, _ = readMessage(conn)
 		sendSelfId(conn)
 	} else {
 		sendSelfId(conn)
-		name = readMessage(conn)
+		name, _ = readMessage(conn)
 	}
 
 	addClient(name, conn)
@@ -77,9 +78,9 @@ func addClient(name string, conn net.Conn) {
 	clientsLock.Unlock()
 }
 
-func readMessage(conn net.Conn) string {
-	msg, _ := bufio.NewReader(conn).ReadString('\n')
-	return msg
+func readMessage(conn net.Conn) (string, error) {
+	msg, err := bufio.NewReader(conn).ReadString('\n')
+	return strings.TrimSuffix(msg, "\n"), err
 }
 
 func sendSelfId(conn net.Conn) error {
@@ -99,13 +100,12 @@ func startChat(conn net.Conn) error {
 		conn.Close()
 	}()
 
-	reader := bufio.NewReader(conn)
 	for {
-		message, err := reader.ReadString('\n')
+		msg, err := readMessage(conn)
 		if err != nil {
 			break
 		}
-		fmt.Println("Mensagem recebida de:", conn.RemoteAddr(), ":", message)
+		fmt.Println("Mensagem recebida de:", clients[conn], ":", msg)
 	}
 
 	return nil
