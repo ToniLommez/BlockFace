@@ -59,56 +59,69 @@ func dealWithRequisition(message string, conn net.Conn) {
 }
 
 func handleLeaderRequisition(conn net.Conn, parts []string) {
+	fmt.Printf("Pedido de identificação de lider recebido\n")
 	if i_am_leader {
+		fmt.Printf("Respondendo que sou lider")
 		sendMessage("YES", conn)
 	} else {
 		leader, _, _ := getAny(leaders)
 		ipv6 := getIPv6(leader)
+		fmt.Printf("Respondendo que não sou lider, ip do lider sendo enviado: %s\n", ipv6)
 		sendMessage(ipv6, conn)
 	}
 }
 
 func handlePing(conn net.Conn, parts []string) {
+	fmt.Printf("PING recebido, respondendo com PONG\n")
 	sendMessage("PONG", conn)
 }
 
 func StartAsLeader() error {
 	i_am_leader = true
+	fmt.Printf("Iniciando e se auto intitulando lider da nova rede\n")
 	return startServer()
 }
 
 func EnterToNetwork(ipv6 string) error {
 	i_am_leader = false
 
+	fmt.Printf("Tentando se conectar a %s\n", ipv6)
 	conn, err := connect(ipv6)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Conexão realizada, pergutando se é lider\n")
 	sendMessage("LEADER?", conn)
 	response, err := readMessage(conn)
 	if err != nil {
+		fmt.Printf("erro %v\n", err)
 		disconnectClient(conn)
 		return err
 	}
 
 	if response == "YES" {
+		fmt.Printf("É lider, salvando\n")
 		clientToLeader(conn)
 	} else {
 		disconnectClient(conn)
 		leader_ipv6 := response
+		fmt.Printf("Não é lider, novo endereço de lider recebido como resposta: %v\n", leader_ipv6)
 		conn, err = connect(leader_ipv6)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Conectado ao novo lider\n")
 	}
 
 	go func() {
+		fmt.Printf("Inicializando o proprio server para receber entradas\n")
 		if err := startServer(); err != nil {
 			fmt.Println(err)
 		}
 	}()
 
+	fmt.Printf("Abrindo e mantendo a conexão com o novo lider\n")
 	go startChat(conn, leaders, removeLeader)
 
 	return nil
@@ -141,6 +154,7 @@ func broadcastNodes(message string) {
 }
 
 func PingAll() {
+	fmt.Printf("Realizando ping em broadcast\n")
 	broadcast("PING")
 }
 
