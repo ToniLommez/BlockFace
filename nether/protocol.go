@@ -125,7 +125,7 @@ func EnterToNetwork(ipv6 string) error {
 	}()
 
 	fmt.Printf("Abrindo e mantendo a conexão com o novo lider\n")
-	go startChat(conn, leaders, removeLeader)
+	go startChat(conn, removeLeader)
 
 	return nil
 }
@@ -146,7 +146,6 @@ func broadcast(message string) {
 
 func broadcastLeaders(message string) {
 	for conn := range leaders {
-		fmt.Printf("Fazendo broadcast ao lider: %s\n", message)
 		sendMessage(message, conn)
 	}
 }
@@ -299,7 +298,7 @@ func handleElected(conn net.Conn, parts []string) {
 		new_leader_conn, err := connect(new_leader)
 		clientToLeader(new_leader_conn)
 		if err == nil {
-			go startChat(new_leader_conn, leaders, removeLeader)
+			go startChat(new_leader_conn, removeLeader)
 		}
 	} else {
 		fmt.Printf("Nao sou lider e estou escolhendo um lider aleatorio para conectar")
@@ -308,7 +307,7 @@ func handleElected(conn net.Conn, parts []string) {
 			new_leader_conn, err := connect(leader)
 			clientToLeader(new_leader_conn)
 			if err == nil {
-				go startChat(new_leader_conn, leaders, removeLeader)
+				go startChat(new_leader_conn, removeLeader)
 			}
 		}
 	}

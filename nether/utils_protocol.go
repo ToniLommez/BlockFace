@@ -60,10 +60,10 @@ func clientToLeader(conn net.Conn) {
 	removeClient(conn)
 }
 
-func clientToNode(conn net.Conn) {
+/* func clientToNode(conn net.Conn) {
 	addNode(clients[conn], conn)
 	removeClient(conn)
-}
+} */
 
 func disconnectClient(conn net.Conn) {
 	removeClient(conn)
@@ -75,7 +75,9 @@ func disconnectLeader(conn net.Conn) {
 	conn.Close()
 }
 
+/*
 func disconnectNode(conn net.Conn) {
 	removeNode(conn)
 	conn.Close()
 }
+*/

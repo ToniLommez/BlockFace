@@ -83,10 +83,10 @@ func serverHandle(conn net.Conn) {
 		} else {
 			addNode(name, conn)
 		}
-		startChat(conn, nodes, removeNode)
+		startChat(conn, removeNode)
 	} else {
 		addClient(name, conn)
-		startChat(conn, clients, removeClient)
+		startChat(conn, removeClient)
 	}
 }
 
@@ -118,7 +118,7 @@ func sendSelfId(conn net.Conn) error {
 	return err
 }
 
-func startChat(conn net.Conn, m map[net.Conn]string, remove func(conn net.Conn)) error {
+func startChat(conn net.Conn, remove func(conn net.Conn)) error {
 	defer remove(conn)
 
 	for {
@@ -127,7 +127,7 @@ func startChat(conn net.Conn, m map[net.Conn]string, remove func(conn net.Conn))
 			break
 		}
 		fmt.Println("Mensagem recebida:", msg)
-		dealWithRequisition(msg, conn)
+		go dealWithRequisition(msg, conn)
 	}
 
 	return nil
@@ -172,7 +172,7 @@ func ProcessIpv6(ipv6Address string) (string, error) {
 	if ipv6Address == "" {
 		error := "nenhum endereço IPv6 válido encontrado"
 		fmt.Println(error)
-		return "", fmt.Errorf(error)
+		return "", fmt.Errorf("%v", error)
 	}
 
 	listenAddress := DigestIpv6(ipv6Address)
