@@ -208,18 +208,22 @@ func handleWinAdvice(conn net.Conn, parts []string) {
 		return
 	}
 
+	fmt.Printf("Adicionando Win valido ao sistema\n")
 	new_leaders_lock.Lock()
 
 	leader_ipv6 := parts[1]
 	new_leaders = append(new_leaders, leader_ipv6)
+	fmt.Printf("Novo lider adicionado a lista: %s\n", leader_ipv6)
 
 	if len(new_leaders) == number_of_leaders {
+		fmt.Printf("Eleicao finalizada, avisando os nos dos lideres encontrados\n")
 		message := "ELECTED"
 		for _, leader := range new_leaders {
 			message = fmt.Sprintf("%s %s", message, leader)
 		}
 		broadcastNodes(message)
 	}
+	fmt.Printf("Destravando acesso ao array de new_leaders\n")
 	new_leaders_lock.Unlock()
 }
 
