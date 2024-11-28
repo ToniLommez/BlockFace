@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	cancelFunc context.CancelFunc
-	THREADS    = 8
-	LIMIT      = 100_000
+	cancelFunc      context.CancelFunc
+	THREADS         = 8
+	LIMIT           = 100_000
+	STOP_PROCESSING = false
 )
 
 func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Context, wg *sync.WaitGroup, results chan<- int) {
@@ -48,6 +49,10 @@ func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Cont
 				start += step
 				nonce = start
 			}
+
+			if STOP_PROCESSING {
+				return
+			}
 		}
 	}
 }
@@ -75,7 +80,7 @@ func proof_of_work(zeroes int, message []byte) (int, bool) {
 	}
 
 	wg.Wait()
-	close(results) // Agora o canal é fechado apenas após todas as goroutines terminarem
+	close(results)
 
 	return nonce, found
 }

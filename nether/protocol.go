@@ -262,8 +262,9 @@ func handleWinRejected(conn net.Conn, parts []string) {
 }
 
 func handleElected(conn net.Conn, parts []string) {
+	fmt.Printf("Cancelando mineração, outro líder já foi eleito.\n")
+	STOP_PROCESSING = true
 	if cancelFunc != nil {
-		fmt.Println("Cancelando mineração, outro líder já foi eleito.")
 		cancelFunc()
 	}
 
@@ -273,29 +274,36 @@ func handleElected(conn net.Conn, parts []string) {
 	election_message = ""
 	new_leaders = make([]string, 0)
 
+	fmt.Printf("Desconectando de outros lideres.\n")
 	for leader_conn := range leaders {
 		disconnectLeader(leader_conn)
 	}
 
 	if become_leader_after_election {
+		fmt.Printf("Vou me tornar lider\n")
 		i_am_leader = true
 	} else {
+		fmt.Printf("Nao vou me tornar lider\n")
 		i_am_leader = false
 	}
 
 	new_leaders := parts[1:]
 	if len(new_leaders) == 0 {
-		fmt.Printf("NENHUM LIDER ENCONTRADO! PANICO")
+		fmt.Printf("NENHUM LIDER ENCONTRADO! PANICO\n")
 	}
 	if i_am_leader {
+		fmt.Printf("Eu sou lider e estou conectando nos outros lideres\n")
 		new_leader, _ := chooseRandom(new_leaders)
+		fmt.Printf("Conectando a: %s\n", new_leader)
 		new_leader_conn, err := connect(new_leader)
 		clientToLeader(new_leader_conn)
 		if err == nil {
 			go startChat(new_leader_conn, leaders, removeLeader)
 		}
 	} else {
+		fmt.Printf("Nao sou lider e estou escolhendo um lider aleatorio para conectar")
 		for _, leader := range new_leaders {
+			fmt.Printf("Conectando a: %s\n", leader)
 			new_leader_conn, err := connect(leader)
 			clientToLeader(new_leader_conn)
 			if err == nil {
