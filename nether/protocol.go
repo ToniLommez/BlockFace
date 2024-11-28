@@ -175,10 +175,11 @@ func StartElection(numberOfLeaders int, numberOfZeroes int) error {
 }
 
 func handleElectionPreparing(conn net.Conn, parts []string) {
-	fmt.Printf("Preparando para eleicao: %v ", parts)
+	fmt.Printf("Preparando para eleicao: %v\n", parts)
 	under_election = true
-	election_zeroes, _ = strconv.Atoi(parts[1])
-	election_message = parts[2]
+	number_of_leaders, _ = strconv.Atoi(parts[1])
+	election_zeroes, _ = strconv.Atoi(parts[2])
+	election_message = parts[3]
 
 	fmt.Printf("Liders se preparando para a eleicao e avisando os nodes\n")
 	requisition := fmt.Sprintf("ELECTION %d %s", election_zeroes, election_message)
