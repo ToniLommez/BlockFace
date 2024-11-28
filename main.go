@@ -65,18 +65,18 @@ func autoLogin() {
 	nether.LoadBlockchain()
 }
 
-func startConnection() {
+func startServer() {
 	go func() {
-		if err := nether.StartConnections(); err != nil {
+		if err := nether.StartAsLeader(); err != nil {
 			fmt.Println(err)
 		}
 	}()
 }
 
-func connect() {
+func startClient() {
 	ipv6 := input("Type the ipv6 server address: ")
 	go func() {
-		if err := nether.Connect(ipv6); err != nil {
+		if err := nether.EnterToNetwork(ipv6); err != nil {
 			fmt.Println(err)
 		}
 	}()
@@ -121,9 +121,9 @@ func main() {
 		case "print blockchain":
 			nether.PrintBlockchain()
 		case "start server":
-			startConnection()
+			startServer()
 		case "start client":
-			connect()
+			startClient()
 		case "ping all":
 			pingAll()
 		default:

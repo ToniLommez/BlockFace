@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"sync"
 )
 
 const (
@@ -13,12 +12,7 @@ const (
 	SERVER_PORT   string = "666"
 )
 
-var (
-	clients     = make(map[net.Conn]string)
-	clientsLock sync.Mutex
-)
-
-func StartConnections() error {
+func startServer() error {
 	ipv6 := GetIPv6()
 	listenAddress, err := ProcessIpv6(ipv6)
 	if err != nil {
@@ -40,47 +34,52 @@ func StartConnections() error {
 		}
 
 		fmt.Println("Peer conectado:", conn.RemoteAddr())
-		go handleConnection(conn, true)
+		go serverHandle(conn)
 	}
 }
 
-func Connect(ipv6 string) error {
+func connect(ipv6 string) (net.Conn, error) {
 	serverAddress := DigestIpv6(ipv6)
 
 	conn, err := net.Dial("tcp", serverAddress)
 	if err != nil {
 		fmt.Println("Erro ao conectar ao servidor:", err)
-		return err
+		return nil, err
 	}
 
-	handleConnection(conn, false)
-	return nil
+	return clientHandle(conn), nil
 }
 
-func handleConnection(conn net.Conn, isReceiver bool) {
-	var name string
+func serverHandle(conn net.Conn) {
+	name, _ := readMessage(conn)
+	sendSelfId(conn)
 
-	if isReceiver {
-		name, _ = readMessage(conn)
-		sendSelfId(conn)
+	if i_am_leader {
+		addNode(name, conn)
+		startChat(conn, removeNode)
 	} else {
-		sendSelfId(conn)
-		name, _ = readMessage(conn)
+		addClient(name, conn)
+		startChat(conn, removeClient)
 	}
+}
+
+func clientHandle(conn net.Conn) net.Conn {
+	sendSelfId(conn)
+	name, _ := readMessage(conn)
 
 	addClient(name, conn)
-	startChat(conn)
-}
-
-func addClient(name string, conn net.Conn) {
-	clientsLock.Lock()
-	clients[conn] = name
-	clientsLock.Unlock()
+	return conn
 }
 
 func readMessage(conn net.Conn) (string, error) {
 	msg, err := bufio.NewReader(conn).ReadString('\n')
 	return strings.TrimSuffix(msg, "\n"), err
+}
+
+func sendMessage(message string, conn net.Conn) error {
+	message += "\n"
+	_, err := conn.Write([]byte(message))
+	return err
 }
 
 func sendSelfId(conn net.Conn) error {
@@ -92,13 +91,8 @@ func sendSelfId(conn net.Conn) error {
 	return err
 }
 
-func startChat(conn net.Conn) error {
-	defer func() {
-		clientsLock.Lock()
-		delete(clients, conn)
-		clientsLock.Unlock()
-		conn.Close()
-	}()
+func startChat(conn net.Conn, remove func(conn net.Conn)) error {
+	defer remove(conn)
 
 	for {
 		msg, err := readMessage(conn)
@@ -106,23 +100,12 @@ func startChat(conn net.Conn) error {
 			break
 		}
 		fmt.Println("Mensagem recebida de:", clients[conn], ":", msg)
+		dealWithRequisition(msg, conn)
 	}
 
 	return nil
 }
 
-func PingAll() {
-	for conn := range clients {
-		message := "Ping" + "\n"
-		_, err := conn.Write([]byte(message))
-		if err != nil {
-			fmt.Println("Erro ao enviar mensagem:", err)
-			return
-		}
-	}
-}
-
-// GetIPv6 obtem um único endereço IPv6 global válido e não local
 func GetIPv6() string {
 	interfaces, err := net.Interfaces()
 	if err != nil {
