@@ -3,7 +3,6 @@ package nether
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -24,17 +23,17 @@ var (
 func StartServer() {
 	ipv6Address := GetValidIPv6Address()
 	if ipv6Address == "" {
-		log.Println("Nenhum endereço IPv6 válido encontrado.")
+		fmt.Println("Nenhum endereço IPv6 válido encontrado.")
 		return
 	}
 
 	listenAddress := fmt.Sprintf("[%s]:%s", ipv6Address, port)
-	log.Println("Servidor aberto em: ", listenAddress)
+	fmt.Println("Servidor aberto em: ", listenAddress)
 	os.WriteFile(SERVER_ADRESS, []byte(listenAddress), 0644)
 
 	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
-		log.Println("Erro ao iniciar o servidor:", err)
+		fmt.Println("Erro ao iniciar o servidor:", err)
 		return
 	}
 	defer listener.Close()
@@ -42,11 +41,11 @@ func StartServer() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Println("Erro ao aceitar conexão:", err)
+			fmt.Println("Erro ao aceitar conexão:", err)
 			continue
 		}
 
-		log.Println("Peer conectado:", conn.RemoteAddr())
+		fmt.Println("Peer conectado:", conn.RemoteAddr())
 		go handleConnection(conn)
 	}
 }
@@ -61,10 +60,10 @@ func StartClient(ipv6 string) {
 	serverAddress := fmt.Sprintf("%s:%s", ipv6, port)
 	conn, err := net.Dial("tcp", serverAddress)
 	if err != nil {
-		log.Println("Erro ao conectar ao servidor:", err)
+		fmt.Println("Erro ao conectar ao servidor:", err)
 		return
 	}
-	log.Println("Conectado ao servidor em", serverAddress)
+	fmt.Println("Conectado ao servidor em", serverAddress)
 
 	_, err = conn.Write([]byte(EncodePublicKey(userdata.Key.Pk)))
 	if err != nil {
@@ -86,10 +85,10 @@ func startChat(conn net.Conn) {
 		for {
 			message, err := reader.ReadString('\n')
 			if err != nil {
-				log.Println("Conexão encerrada:", err)
+				fmt.Println("Conexão encerrada:", err)
 				break
 			}
-			log.Println("Mensagem recebida:", message)
+			fmt.Println("Mensagem recebida:", message)
 		}
 	}()
 
@@ -100,7 +99,7 @@ func startChat(conn net.Conn) {
 
 		_, err := conn.Write([]byte(fmt.Sprintf("Ping: %d\n", ping)))
 		if err != nil {
-			log.Println("Erro ao enviar mensagem:", err)
+			fmt.Println("Erro ao enviar mensagem:", err)
 			return
 		}
 
@@ -114,7 +113,7 @@ func handleConnection(conn net.Conn) {
 		delete(clients, conn)
 		clientsLock.Unlock()
 		conn.Close()
-		log.Println("Conexão encerrada com:", conn.RemoteAddr())
+		fmt.Println("Conexão encerrada com:", conn.RemoteAddr())
 	}()
 
 	reader := bufio.NewReader(conn)
@@ -125,7 +124,7 @@ func handleConnection(conn net.Conn) {
 
 	for {
 		message, _ := reader.ReadString('\n')
-		log.Println("Mensagem recebida de", conn.RemoteAddr(), ":", message)
+		fmt.Println("Mensagem recebida de", conn.RemoteAddr(), ":", message)
 		// Broadcast
 	}
 }
@@ -134,7 +133,7 @@ func handleConnection(conn net.Conn) {
 func GetValidIPv6Address() string {
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		log.Println("Erro ao obter interfaces:", err)
+		fmt.Println("Erro ao obter interfaces:", err)
 		return ""
 	}
 
