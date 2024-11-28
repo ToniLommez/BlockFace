@@ -65,13 +65,27 @@ func autoLogin() {
 	nether.LoadBlockchain()
 }
 
-func startClient() {
-	nether.StartClient(input("Type the ipv6 server address: "))
+func startConnection() {
+	go func() {
+		if err := nether.StartConnections(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+}
+
+func connect() {
+	if err := nether.Connect(input("Type the ipv6 server address: ")); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func pingAll() {
+	nether.PingAll()
 }
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	nether.StartLog()
+	// nether.StartLog()
 
 	fmt.Println("Welcome to nether blockchain - type your command:")
 
@@ -104,9 +118,11 @@ func main() {
 		case "print blockchain":
 			nether.PrintBlockchain()
 		case "start server":
-			go nether.StartServer()
+			startConnection()
 		case "start client":
-			startClient()
+			connect()
+		case "ping all":
+			pingAll()
 		default:
 			fmt.Println("No command found")
 		}
