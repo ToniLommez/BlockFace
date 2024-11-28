@@ -184,6 +184,7 @@ func handleElectionPreparing(conn net.Conn, parts []string) {
 	requisition := fmt.Sprintf("ELECTION %d %s", election_zeroes, election_message)
 
 	broadcastNodes(requisition)
+	broadcastLeaders(requisition)
 }
 
 func handleElection(conn net.Conn, parts []string) {
