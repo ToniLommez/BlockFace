@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 )
 
 const (
@@ -25,7 +26,10 @@ func startServer() error {
 		return err
 	}
 
+	go handleServerConnections(listener)
+
 	if i_am_leader {
+		time.Sleep(1 * time.Second)
 		selfConn, err := connect(ipv6)
 		if err != nil {
 			return err
@@ -33,6 +37,10 @@ func startServer() error {
 		clientToLeader(selfConn)
 	}
 
+	return nil
+}
+
+func handleServerConnections(listener net.Listener) {
 	defer listener.Close()
 	for {
 		conn, err := listener.Accept()
