@@ -101,7 +101,7 @@ func EnterToNetwork(ipv6 string) error {
 	}()
 
 	fmt.Printf("Entrando no modo de escuta\n")
-	err = startChat(conn, removeLeader)
+	err = startChat(conn, leaders, removeLeader)
 
 	return err
 }

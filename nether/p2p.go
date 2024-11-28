@@ -56,10 +56,10 @@ func serverHandle(conn net.Conn) {
 
 	if i_am_leader {
 		addNode(name, conn)
-		startChat(conn, removeNode)
+		startChat(conn, nodes, removeNode)
 	} else {
 		addClient(name, conn)
-		startChat(conn, removeClient)
+		startChat(conn, clients, removeClient)
 	}
 }
 
@@ -91,7 +91,7 @@ func sendSelfId(conn net.Conn) error {
 	return err
 }
 
-func startChat(conn net.Conn, remove func(conn net.Conn)) error {
+func startChat(conn net.Conn, m map[net.Conn]string, remove func(conn net.Conn)) error {
 	defer remove(conn)
 
 	for {
@@ -99,7 +99,7 @@ func startChat(conn net.Conn, remove func(conn net.Conn)) error {
 		if err != nil {
 			break
 		}
-		fmt.Println("Mensagem recebida de:", clients[conn], ":", msg)
+		fmt.Println("Mensagem recebida de:", m[conn], ":", msg)
 		dealWithRequisition(msg, conn)
 	}
 
