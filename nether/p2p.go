@@ -13,6 +13,10 @@ const (
 	SERVER_PORT   string = "666"
 )
 
+var (
+	self_ipv6 = ""
+)
+
 func startServer() error {
 	ipv6 := GetIPv6()
 	listenAddress, err := ProcessIpv6(ipv6)
@@ -20,6 +24,7 @@ func startServer() error {
 		return err
 	}
 
+	self_ipv6 = listenAddress
 	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		fmt.Println("Erro ao iniciar o servidor:", err)
@@ -72,7 +77,11 @@ func serverHandle(conn net.Conn) {
 	sendSelfId(conn)
 
 	if i_am_leader {
-		addNode(name, conn)
+		if conn.LocalAddr().String() == self_ipv6 {
+			addLeader(name, conn)
+		} else {
+			addNode(name, conn)
+		}
 		startChat(conn, nodes, removeNode)
 	} else {
 		addClient(name, conn)
