@@ -81,12 +81,9 @@ func serverHandle(conn net.Conn) {
 }
 
 func clientHandle(conn net.Conn) net.Conn {
-	fmt.Printf("Se identificando para a rede\n")
 	sendSelfId(conn)
-	fmt.Printf("Recebendo identificacao do conector\n")
 	name, _ := readMessage(conn)
 
-	fmt.Printf("Identificacao recebida, adicionando: %s\n", name)
 	addClient(name, conn)
 	return conn
 }
