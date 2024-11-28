@@ -113,6 +113,7 @@ func EnterToNetwork(ipv6 string) error {
 		if err != nil {
 			return err
 		}
+		clientToLeader(conn)
 		fmt.Printf("Conectado ao novo lider\n")
 	}
 
