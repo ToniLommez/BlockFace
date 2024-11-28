@@ -303,3 +303,16 @@ func handleElected(conn net.Conn, parts []string) {
 		}
 	}
 }
+
+func ShowConnections() error {
+	for conn, name := range clients {
+		fmt.Println("clients = name: %s | conn %s", name[0:10], conn.RemoteAddr())
+	}
+	for conn, name := range leaders {
+		fmt.Println("leaders = name: %s | conn %s", name[0:10], conn.RemoteAddr())
+	}
+	for conn, name := range nodes {
+		fmt.Println("nodes   = name: %s | conn %s", name[0:10], conn.RemoteAddr())
+	}
+	return nil
+}

@@ -112,6 +112,14 @@ func startElection() {
 	}()
 }
 
+func showConnections() {
+	go func() {
+		if err := nether.ShowConnections(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	// nether.StartLog()
@@ -155,6 +163,8 @@ func main() {
 			pingAll()
 		case "start election":
 			startElection()
+		case "show connections":
+			showConnections()
 		default:
 			fmt.Println("No command found")
 		}
