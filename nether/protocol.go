@@ -50,7 +50,6 @@ func handleLeaderRequisition(conn net.Conn) {
 	if i_am_leader {
 		fmt.Printf("Respondendo que sou o lider\n")
 		sendMessage("YES", conn)
-		clientToNode(conn)
 	} else {
 		leader, _, _ := getAny(leaders)
 		ipv6 := getIPv6(leader)
