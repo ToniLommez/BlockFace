@@ -86,6 +86,14 @@ func pingAll() {
 	nether.PingAll()
 }
 
+func startElection() {
+	go func() {
+		if err := nether.StartElection(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	// nether.StartLog()
@@ -126,6 +134,8 @@ func main() {
 			startClient()
 		case "ping all":
 			pingAll()
+		case "start electron":
+			startElection()
 		default:
 			fmt.Println("No command found")
 		}

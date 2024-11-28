@@ -3,6 +3,8 @@ package nether
 import (
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -58,4 +60,17 @@ func (r NetherReader) String() string {
 		"\tFile: %s\n\tCurrent Block: %s\n\tSize: %d\n\tLocal Size: %d\n\tLast Block Index: %d\n\tLast Block Offset: %x\n\tFirst Block Hash: %s",
 		fileInfo, blockInfo, r.size, r.localSize, r.lastBlockIndex, r.lastBlockOffset, base64.StdEncoding.EncodeToString(r.firstBlockHash[:]),
 	)
+}
+
+func randomString(minLength, maxLength int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	length := rand.Intn(maxLength-minLength+1) + minLength
+
+	var sb strings.Builder
+	for i := 0; i < length; i++ {
+		sb.WriteByte(charset[rand.Intn(len(charset))])
+	}
+
+	return sb.String()
 }
