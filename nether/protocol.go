@@ -61,7 +61,7 @@ func dealWithRequisition(message string, conn net.Conn) {
 func handleLeaderRequisition(conn net.Conn, parts []string) {
 	fmt.Printf("Pedido de identificação de lider recebido\n")
 	if i_am_leader {
-		fmt.Printf("Respondendo que sou lider")
+		fmt.Printf("Respondendo que sou lider\n")
 		sendMessage("YES", conn)
 	} else {
 		leader, _, _ := getAny(leaders)
@@ -175,10 +175,10 @@ func StartElection(numberOfLeaders int, numberOfZeroes int) error {
 }
 
 func handleElectionPreparing(conn net.Conn, parts []string) {
+	fmt.Printf("Preparando para eleicao: %v ", parts)
 	under_election = true
-	number_of_leaders, _ = strconv.Atoi(parts[1])
-	election_zeroes, _ = strconv.Atoi(parts[2])
-	election_message = parts[3]
+	election_zeroes, _ = strconv.Atoi(parts[1])
+	election_message = parts[2]
 
 	fmt.Printf("Liders se preparando para a eleicao e avisando os nodes\n")
 	requisition := fmt.Sprintf("NEW_ELECTION %d %s", election_zeroes, election_message)
