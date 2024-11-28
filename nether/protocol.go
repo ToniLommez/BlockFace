@@ -239,6 +239,7 @@ func handleWin(conn net.Conn, parts []string) {
 
 	valid := validateProof([]byte(election_message), nonce, election_zeroes)
 	if valid {
+		fmt.Printf("Win valido encontrado, avisando lideres, e entregando o ACCEPT\n")
 		message := fmt.Sprintf("WIN_ADVICE %s", conn.RemoteAddr())
 		broadcastLeaders(message)
 		sendMessage("WIN_ACCEPTED", conn)
@@ -246,10 +247,12 @@ func handleWin(conn net.Conn, parts []string) {
 }
 
 func handleWinAccepted(conn net.Conn, parts []string) {
+	fmt.Printf("Win aceito!\n")
 	become_leader_after_election = true
 }
 
 func handleWinRejected(conn net.Conn, parts []string) {
+	fmt.Printf("Win rejeitado!\n")
 	become_leader_after_election = false
 }
 
