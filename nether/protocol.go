@@ -175,7 +175,6 @@ func StartElection(numberOfLeaders int, numberOfZeroes int) error {
 }
 
 func handleElectionPreparing(conn net.Conn, parts []string) {
-	fmt.Printf("Preparando para eleicao: %v\n", parts)
 	under_election = true
 	number_of_leaders, _ = strconv.Atoi(parts[1])
 	election_zeroes, _ = strconv.Atoi(parts[2])
@@ -191,7 +190,7 @@ func handleElection(conn net.Conn, parts []string) {
 	election_zeroes, _ = strconv.Atoi(parts[1])
 	election_message := []byte(parts[2])
 
-	fmt.Printf("Processo de eleição iniciado, zeros: %8d, election_message[0:10]%s\n", election_zeroes, string(election_message[0:10]))
+	fmt.Printf("Processo de eleição iniciado, zeros: %8d, election_message[0:10] %s\n", election_zeroes, string(election_message[0:10]))
 	fmt.Printf("Iniciando proof of work\n")
 	nonce, found := proof_of_work(election_zeroes, election_message)
 	if found {

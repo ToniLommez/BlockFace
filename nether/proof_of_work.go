@@ -18,7 +18,6 @@ var (
 )
 
 func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Context, wg *sync.WaitGroup, results chan<- int) {
-	defer close(results)
 	defer wg.Done()
 
 	// Inicialização dos limites com randomState
@@ -76,7 +75,7 @@ func proof_of_work(zeroes int, message []byte) (int, bool) {
 	}
 
 	wg.Wait()
-	close(results)
+	close(results) // Agora o canal é fechado apenas após todas as goroutines terminarem
 
 	return nonce, found
 }
