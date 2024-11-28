@@ -116,7 +116,7 @@ func startChat(conn net.Conn, m map[net.Conn]string, remove func(conn net.Conn))
 		if err != nil {
 			break
 		}
-		fmt.Println("Mensagem recebida de:", m[conn], ":", msg)
+		fmt.Println("Mensagem recebida:", msg)
 		dealWithRequisition(msg, conn)
 	}
 
