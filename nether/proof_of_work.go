@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"math/bits"
 	"math/rand"
 	"sync"
@@ -38,7 +39,7 @@ func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Cont
 			sha := sha256.Sum256(append(message, buf.Bytes()...))
 
 			// Verificando o número de zeros à esquerda
-			if bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:8])) >= zeroes {
+			if bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:])) >= zeroes {
 				results <- nonce
 				return
 			}
@@ -86,5 +87,14 @@ func validateProof(message []byte, nonce int, zeroes int) bool {
 
 	sha := sha256.Sum256(append(message, buf.Bytes()...))
 
-	return bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:8])) >= zeroes
+	return bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:])) >= zeroes
+}
+
+func getHash(message []byte, nonce int) string {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.BigEndian, int64(nonce))
+
+	sha := sha256.Sum256(append(message, buf.Bytes()...))
+
+	return fmt.Sprintf("%x", sha)
 }

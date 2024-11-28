@@ -74,3 +74,12 @@ func randomString(minLength, maxLength int) string {
 
 	return sb.String()
 }
+
+func chooseRandom(strs []string) (string, error) {
+	if len(strs) == 0 {
+		return "", fmt.Errorf("o slice está vazio, não é possível sortear um líder")
+	}
+
+	index := rand.Intn(len(strs))
+	return strs[index], nil
+}

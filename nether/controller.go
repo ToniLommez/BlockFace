@@ -16,6 +16,10 @@ var (
 	reader   *NetherReader
 )
 
+func Start() {
+	initHandlers()
+}
+
 func StartLog() {
 	// Cria ou abre o arquivo para log
 	file, err := os.OpenFile(LOG_PATH, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)

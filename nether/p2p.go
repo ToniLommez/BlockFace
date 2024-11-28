@@ -25,6 +25,14 @@ func startServer() error {
 		return err
 	}
 
+	if i_am_leader {
+		selfConn, err := connect(ipv6)
+		if err != nil {
+			return err
+		}
+		clientToLeader(selfConn)
+	}
+
 	defer listener.Close()
 	for {
 		conn, err := listener.Accept()

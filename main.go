@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -30,6 +31,21 @@ func input(prompt string) string {
 	fmt.Println(prompt)
 	data, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	return strings.TrimSpace(data)
+}
+
+func inputNumber(prompt string) int {
+	for {
+		fmt.Println(prompt)
+		data, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		data = strings.TrimSpace(data)
+
+		num, err := strconv.Atoi(data)
+		if err != nil {
+			fmt.Println("Entrada inválida, tente novamente.")
+			continue
+		}
+		return num
+	}
 }
 
 func register() {
@@ -87,8 +103,9 @@ func pingAll() {
 }
 
 func startElection() {
+	numberOfLeaders := inputNumber("Type the number of leaders: ")
 	go func() {
-		if err := nether.StartElection(); err != nil {
+		if err := nether.StartElection(numberOfLeaders); err != nil {
 			fmt.Println(err)
 		}
 	}()
@@ -97,6 +114,7 @@ func startElection() {
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	// nether.StartLog()
+	nether.Start()
 
 	fmt.Println("Welcome to nether blockchain - type your command:")
 
