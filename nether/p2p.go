@@ -60,20 +60,14 @@ func handleConnection(conn net.Conn, isReceiver bool) {
 	var name string
 
 	if isReceiver {
-		fmt.Println("esperando nome")
 		name = readMessage(conn)
-		fmt.Println("enviando nome")
 		sendSelfId(conn)
 	} else {
-		fmt.Println("enviando nome")
 		sendSelfId(conn)
-		fmt.Println("esperando nome")
 		name = readMessage(conn)
 	}
 
-	fmt.Println("adicionando cliente")
 	addClient(name, conn)
-	fmt.Println("iniciando chat")
 	startChat(conn)
 }
 
@@ -119,7 +113,8 @@ func startChat(conn net.Conn) error {
 
 func PingAll() {
 	for conn := range clients {
-		_, err := conn.Write([]byte("Ping"))
+		message := "Ping" + "\n"
+		_, err := conn.Write([]byte(message))
 		if err != nil {
 			fmt.Println("Erro ao enviar mensagem:", err)
 			return
