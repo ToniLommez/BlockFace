@@ -89,7 +89,8 @@ func readMessage(conn net.Conn) string {
 }
 
 func sendSelfId(conn net.Conn) error {
-	_, err := conn.Write([]byte(EncodePublicKey(userdata.Key.Pk)))
+	message := EncodePublicKey(userdata.Key.Pk) + "\n"
+	_, err := conn.Write([]byte(message))
 	if err != nil {
 		fmt.Println("Erro ao enviar mensagem:", err)
 	}
