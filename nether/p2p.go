@@ -71,7 +71,9 @@ func handleConnection(conn net.Conn, isReceiver bool) {
 		name = readMessage(conn)
 	}
 
+	fmt.Println("adicionando cliente")
 	addClient(name, conn)
+	fmt.Println("iniciando chat")
 	startChat(conn)
 }
 
