@@ -221,7 +221,7 @@ func handleWinAdvice(conn net.Conn, parts []string) {
 		for _, leader := range new_leaders {
 			message = fmt.Sprintf("%s %s", message, leader)
 		}
-		broadcastNodes(message)
+		broadcast(message)
 	}
 	fmt.Printf("Destravando acesso ao array de new_leaders\n")
 	new_leaders_lock.Unlock()
