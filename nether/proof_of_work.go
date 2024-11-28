@@ -16,38 +16,51 @@ var (
 	THREADS         = 16
 	LIMIT           = 100_000
 	STOP_PROCESSING = false
+	characters      = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 )
 
-func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Context, wg *sync.WaitGroup, results chan<- int) {
+// Gera uma string incremental com base em um contador
+func generateNonce(base int, counter int) string {
+	nonce := ""
+	for counter > 0 {
+		nonce = string(characters[counter%base]) + nonce
+		counter /= base
+	}
+	return nonce
+}
+
+func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Context, wg *sync.WaitGroup, results chan<- string) {
 	defer wg.Done()
 
-	// Inicialização dos limites com randomState
 	start := LIMIT*tid + randomState
 	step := LIMIT * THREADS
 	var buf bytes.Buffer
 
-	for nonce := start; ; nonce++ {
+	for counter := start; ; counter++ {
 		select {
 		case <-ctx.Done():
 			return
 		default:
+			// Gerando o nonce como string
+			nonceStr := generateNonce(len(characters), counter)
+
 			// Escrevendo o nonce no buffer
 			buf.Reset()
-			binary.Write(&buf, binary.BigEndian, int64(nonce))
+			binary.Write(&buf, binary.BigEndian, []byte(nonceStr))
 
 			// Gerando o hash
 			sha := sha256.Sum256(append(message, buf.Bytes()...))
 
 			// Verificando o número de zeros à esquerda
 			if bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:])) >= zeroes {
-				results <- nonce
+				results <- nonceStr
 				return
 			}
 
 			// Atualizando os limites
-			if nonce-start >= LIMIT {
+			if counter-start >= LIMIT {
 				start += step
-				nonce = start
+				counter = start
 			}
 
 			if STOP_PROCESSING {
@@ -57,9 +70,9 @@ func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Cont
 	}
 }
 
-func proof_of_work(zeroes int, message []byte) (int, bool) {
+func proof_of_work(zeroes int, message []byte) (string, bool) {
 	var wg sync.WaitGroup
-	results := make(chan int, THREADS)
+	results := make(chan string, THREADS)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancelFunc = cancel
@@ -70,13 +83,13 @@ func proof_of_work(zeroes int, message []byte) (int, bool) {
 	}
 
 	found := false
-	var nonce int
+	var nonce string
 	select {
 	case nonce = <-results:
 		found = true
 		cancel()
 	case <-ctx.Done():
-		nonce = 0
+		nonce = ""
 	}
 
 	wg.Wait()
@@ -85,18 +98,18 @@ func proof_of_work(zeroes int, message []byte) (int, bool) {
 	return nonce, found
 }
 
-func validateProof(message []byte, nonce int, zeroes int) bool {
+func validateProof(message []byte, nonce string, zeroes int) bool {
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, int64(nonce))
+	binary.Write(&buf, binary.BigEndian, []byte(nonce))
 
 	sha := sha256.Sum256(append(message, buf.Bytes()...))
 
 	return bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:])) >= zeroes
 }
 
-func getHash(message []byte, nonce int) string {
+func getHash(message []byte, nonce string) string {
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, int64(nonce))
+	binary.Write(&buf, binary.BigEndian, []byte(nonce))
 
 	sha := sha256.Sum256(append(message, buf.Bytes()...))
 

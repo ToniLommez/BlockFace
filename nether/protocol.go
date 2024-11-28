@@ -196,8 +196,8 @@ func handleElection(conn net.Conn, parts []string) {
 	fmt.Printf("Iniciando proof of work\n")
 	nonce, found := proof_of_work(election_zeroes, election_message)
 	if found {
-		fmt.Printf("Eu fui o ganhador! nonce: %16d, hash: %s\n", nonce, getHash(election_message, nonce))
-		message := fmt.Sprintf("WIN %d", nonce)
+		fmt.Printf("Eu fui o ganhador! nonce: %16s, hash: %s\n", nonce, getHash(election_message, nonce))
+		message := fmt.Sprintf("WIN %s", nonce)
 		leader, _, _ := getAny(leaders)
 		sendMessage(message, leader)
 	}
@@ -240,7 +240,7 @@ func handleWin(conn net.Conn, parts []string) {
 		return
 	}
 
-	nonce, _ := strconv.Atoi(parts[1])
+	nonce := parts[1]
 
 	valid := validateProof([]byte(election_message), nonce, election_zeroes)
 	if valid {
