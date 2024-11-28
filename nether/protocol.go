@@ -88,6 +88,7 @@ func EnterToNetwork(ipv6 string) error {
 	fmt.Printf("Tentando se conectar a %s\n", ipv6)
 	conn, err := connect(ipv6)
 	if err != nil {
+		fmt.Printf("Erro encontrado: %v\n", err)
 		return err
 	}
 
