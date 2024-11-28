@@ -19,6 +19,8 @@ var (
 
 	handlers = map[string]func(conn net.Conn){
 		"LEADER?": handleLeaderRequisition,
+		"PING":    handlePing,
+		"PONG":    handlePong,
 	}
 )
 
@@ -56,6 +58,12 @@ func handleLeaderRequisition(conn net.Conn) {
 		sendMessage(ipv6, conn)
 	}
 }
+
+func handlePing(conn net.Conn) {
+	sendMessage("PONG", conn)
+}
+
+func handlePong(conn net.Conn) {}
 
 func StartAsLeader() error {
 	i_am_leader = true
@@ -107,5 +115,5 @@ func EnterToNetwork(ipv6 string) error {
 }
 
 func PingAll() {
-	broadcast("ping")
+	broadcast("PING")
 }
