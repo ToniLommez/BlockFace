@@ -24,7 +24,7 @@ func startServer() error {
 		return err
 	}
 
-	self_ipv6 = listenAddress
+	self_ipv6 = ipv6
 	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		fmt.Println("Erro ao iniciar o servidor:", err)
@@ -77,7 +77,8 @@ func serverHandle(conn net.Conn) {
 	sendSelfId(conn)
 
 	if i_am_leader {
-		if conn.LocalAddr().String() == self_ipv6 {
+		ip, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+		if ip == self_ipv6 {
 			addLeader(name, conn)
 		} else {
 			addNode(name, conn)
@@ -175,7 +176,7 @@ func ProcessIpv6(ipv6Address string) (string, error) {
 	}
 
 	listenAddress := DigestIpv6(ipv6Address)
-	fmt.Println("Servidor aberto em: ", listenAddress)
+	fmt.Println("Servidor aberto em:", listenAddress)
 	// os.WriteFile(SERVER_ADRESS, []byte(listenAddress), 0644)
 
 	return listenAddress, nil
