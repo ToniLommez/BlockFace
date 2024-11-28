@@ -168,7 +168,7 @@ func StartElection(numberOfLeaders int, numberOfZeroes int) error {
 	message := randomString(30, 40)
 	fmt.Printf("Iniciando preparacao para eleicao!\nnumero de lideres: %2d, zeros: %2d, message[0:10]: %s\n", numberOfLeaders, numberOfZeroes, string(message[0:10]))
 
-	requisition := fmt.Sprintf("NEW_ELECTION %d %d %s", numberOfLeaders, numberOfZeroes, message)
+	requisition := fmt.Sprintf("ELECTION %d %d %s", numberOfLeaders, numberOfZeroes, message)
 	broadcastLeaders(requisition)
 
 	return nil
