@@ -146,6 +146,7 @@ func broadcast(message string) {
 
 func broadcastLeaders(message string) {
 	for conn := range leaders {
+		fmt.Printf("Fazendo broadcast ao lider: %s\n", message)
 		sendMessage(message, conn)
 	}
 }

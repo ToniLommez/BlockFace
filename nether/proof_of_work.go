@@ -13,7 +13,7 @@ import (
 
 var (
 	cancelFunc      context.CancelFunc
-	THREADS         = 8
+	THREADS         = 16
 	LIMIT           = 100_000
 	STOP_PROCESSING = false
 )
