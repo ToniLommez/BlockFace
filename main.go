@@ -74,9 +74,12 @@ func startConnection() {
 }
 
 func connect() {
-	if err := nether.Connect(input("Type the ipv6 server address: ")); err != nil {
-		fmt.Println(err)
-	}
+	ipv6 := input("Type the ipv6 server address: ")
+	go func() {
+		if err := nether.Connect(ipv6); err != nil {
+			fmt.Println(err)
+		}
+	}()
 }
 
 func pingAll() {

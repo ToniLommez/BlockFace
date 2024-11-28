@@ -60,10 +60,14 @@ func handleConnection(conn net.Conn, isReceiver bool) {
 	var name string
 
 	if isReceiver {
+		fmt.Println("esperando nome")
 		name = readMessage(conn)
+		fmt.Println("enviando nome")
 		sendSelfId(conn)
 	} else {
+		fmt.Println("enviando nome")
 		sendSelfId(conn)
+		fmt.Println("esperando nome")
 		name = readMessage(conn)
 	}
 
