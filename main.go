@@ -104,8 +104,9 @@ func pingAll() {
 
 func startElection() {
 	numberOfLeaders := inputNumber("Type the number of leaders: ")
+	numberOfZeroes := inputNumber("Type the number of zeroes: ")
 	go func() {
-		if err := nether.StartElection(numberOfLeaders); err != nil {
+		if err := nether.StartElection(numberOfLeaders, numberOfZeroes); err != nil {
 			fmt.Println(err)
 		}
 	}()
@@ -152,7 +153,7 @@ func main() {
 			startClient()
 		case "ping all":
 			pingAll()
-		case "start electron":
+		case "start election":
 			startElection()
 		default:
 			fmt.Println("No command found")

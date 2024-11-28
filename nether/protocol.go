@@ -79,6 +79,7 @@ func handlePing(conn net.Conn, parts []string) {
 func StartAsLeader() error {
 	i_am_leader = true
 	fmt.Printf("Iniciando e se auto intitulando lider da nova rede\n")
+
 	return startServer()
 }
 
@@ -159,16 +160,15 @@ func PingAll() {
 	broadcast("PING")
 }
 
-func StartElection(numberOfLeaders int) error {
+func StartElection(numberOfLeaders int, numberOfZeroes int) error {
 	if !i_am_leader {
 		return fmt.Errorf("only leaders can start an election")
 	}
 
-	zeroes := 16
 	message := randomString(30, 40)
-	requisition := fmt.Sprintf("NEW_ELECTION %d %d %s", numberOfLeaders, zeroes, message)
+	requisition := fmt.Sprintf("NEW_ELECTION %d %d %s", numberOfLeaders, numberOfZeroes, message)
 
-	fmt.Printf("Iniciando preparacao para eleicao!\nnumero de lideres: %2d, zeros: %2d, message[0:10]: %s\n", numberOfLeaders, zeroes, string(election_message[0:10]))
+	fmt.Printf("Iniciando preparacao para eleicao!\nnumero de lideres: %2d, zeros: %2d, message[0:10]: %s\n", numberOfLeaders, numberOfZeroes, string(message[0:10]))
 	broadcastLeaders(requisition)
 
 	return nil
