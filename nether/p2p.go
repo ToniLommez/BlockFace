@@ -123,9 +123,12 @@ func handleConnection(conn net.Conn) {
 	clientsLock.Unlock()
 
 	for {
-		message, _ := reader.ReadString('\n')
-		fmt.Println("Mensagem recebida de", conn.RemoteAddr(), ":", message)
-		// Broadcast
+		message, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Conexão encerrada:", err)
+			break
+		}
+		fmt.Println("Mensagem recebida de:", conn.RemoteAddr(), ":", message)
 	}
 }
 
