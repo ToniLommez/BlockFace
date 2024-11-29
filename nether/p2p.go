@@ -158,6 +158,7 @@ func GetIPv6() string {
 			continue
 		}
 
+		jump := true
 		for _, addr := range addrs {
 			ip, _, err := net.ParseCIDR(addr.String())
 			if err != nil {
@@ -165,6 +166,10 @@ func GetIPv6() string {
 			}
 
 			if ip.To4() == nil && ip.IsGlobalUnicast() && !ip.IsLoopback() {
+				if jump {
+					jump = false
+					continue
+				}
 				return ip.String()
 			}
 		}
