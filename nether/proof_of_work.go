@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"math/bits"
 	"math/rand"
@@ -46,13 +45,13 @@ func mine(message []byte, zeroes int, tid int, randomState int, ctx context.Cont
 
 			// Escrevendo o nonce no buffer
 			buf.Reset()
-			binary.Write(&buf, binary.BigEndian, []byte(nonceStr))
+			buf.WriteString(nonceStr)
 
 			// Gerando o hash
 			sha := sha256.Sum256(append(message, buf.Bytes()...))
 
 			// Verificando o número de zeros à esquerda
-			if bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:])) >= zeroes {
+			if leadingZeroBits(sha) >= zeroes {
 				results <- nonceStr
 				return
 			}
@@ -100,18 +99,27 @@ func proof_of_work(zeroes int, message []byte) (string, bool) {
 
 func validateProof(message []byte, nonce string, zeroes int) bool {
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, []byte(nonce))
+	buf.Reset()
+	buf.WriteString(nonce)
 
 	sha := sha256.Sum256(append(message, buf.Bytes()...))
 
-	return bits.LeadingZeros64(binary.BigEndian.Uint64(sha[:])) >= zeroes
+	return leadingZeroBits(sha) >= zeroes
 }
 
 func getHash(message []byte, nonce string) string {
-	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, []byte(nonce))
+	return fmt.Sprintf("%x", sha256.Sum256(append(message, []byte(nonce)...)))
+}
 
-	sha := sha256.Sum256(append(message, buf.Bytes()...))
-
-	return fmt.Sprintf("%x", sha)
+func leadingZeroBits(hash [32]byte) int {
+	count := 0
+	for _, b := range hash {
+		if b == 0 {
+			count += 8
+		} else {
+			count += bits.LeadingZeros8(b)
+			break
+		}
+	}
+	return count
 }

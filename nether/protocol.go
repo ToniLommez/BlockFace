@@ -26,7 +26,7 @@ var (
 	election_zeroes   = 0
 	election_message  = ""
 
-	become_leader_after_election = true
+	become_leader_after_election = false
 
 	new_leaders      = make([]string, 0)
 	new_leaders_lock sync.Mutex
@@ -245,7 +245,9 @@ func handleWin(conn net.Conn, parts []string) {
 	valid := validateProof([]byte(election_message), nonce, election_zeroes)
 	if valid {
 		fmt.Printf("Win valido encontrado, avisando lideres, e entregando o ACCEPT\n")
-		message := fmt.Sprintf("WIN_ADVICE %s", conn.RemoteAddr())
+		remoteAddr := conn.RemoteAddr().String()
+		host, _, _ := net.SplitHostPort(remoteAddr)
+		message := fmt.Sprintf("WIN_ADVICE %s", host)
 		broadcastLeaders(message)
 		sendMessage("WIN_ACCEPTED", conn)
 	}
