@@ -11,10 +11,10 @@ import (
 const (
 	SERVER_ADRESS string = "data/server.conf"
 	SERVER_PORT   string = "666"
-	MESSAGE_END   string = "<END_OF_MESSAGE>"
-	BUFFER_SIZE   int    = 4096
 	HEADER_SIZE   int    = 128
-	PAYLOAD_SIZE  int    = BUFFER_SIZE - HEADER_SIZE
+	BUFFER_SIZE          = 4096
+	PAYLOAD_SIZE         = BUFFER_SIZE - 128
+	MESSAGE_END          = "<END_OF_MESSAGE>"
 )
 
 var (
@@ -112,103 +112,16 @@ func clientHandle(conn net.Conn) net.Conn {
 	return conn
 }
 
-func sendMessage(message string, conn net.Conn) error {
-	messageID := rand.Int63() // Gera um ID único para a mensagem
-
-	// Dividir a mensagem em fragmentos
-	fragments := []string{}
-	for len(message) > 0 {
-		if len(message) > PAYLOAD_SIZE {
-			fragments = append(fragments, message[:PAYLOAD_SIZE])
-			message = message[PAYLOAD_SIZE:]
-		} else {
-			fragments = append(fragments, message)
-			message = ""
-		}
-	}
-
-	totalFragments := len(fragments)
-
-	// Enviar cada fragmento com cabeçalho
-	for i, fragment := range fragments {
-		header := fmt.Sprintf("ID:%d PART:%d/%d ", messageID, i+1, totalFragments)
-		paddedFragment := fragment + MESSAGE_END
-		padding := PAYLOAD_SIZE - len(fragment)
-		paddedFragment += strings.Repeat(" ", padding)
-
-		fullMessage := header + paddedFragment
-		_, err := conn.Write([]byte(fullMessage))
-		if err != nil {
-			return fmt.Errorf("erro ao enviar fragmento %d: %v", i+1, err)
-		}
-	}
-	return nil
-}
-
-func readMessage(conn net.Conn) (string, error) {
-	messageParts := make(map[int]string)
-	var messageID int64
-	var totalFragments int
-
-	for {
-		buffer := make([]byte, BUFFER_SIZE)
-		n, err := conn.Read(buffer)
-		if err != nil {
-			return "", err
-		}
-
-		message := string(buffer[:n])
-
-		// Extrair cabeçalho
-		headerEnd := strings.Index(message, " ")
-		if headerEnd == -1 {
-			return "", fmt.Errorf("cabeçalho inválido na mensagem")
-		}
-		header := message[:headerEnd]
-		body := message[headerEnd+1:]
-
-		// Parse do cabeçalho
-		var partNumber int
-		_, err = fmt.Sscanf(header, "ID:%d PART:%d/%d", &messageID, &partNumber, &totalFragments)
-		if err != nil {
-			return "", fmt.Errorf("erro ao parsear cabeçalho: %v", err)
-		}
-
-		// Localizar o delimitador
-		endIndex := strings.Index(body, MESSAGE_END)
-		if endIndex == -1 {
-			return "", fmt.Errorf("delimitador %q não encontrado na mensagem", MESSAGE_END)
-		}
-
-		// Salvar a parte da mensagem
-		messageParts[partNumber] = strings.TrimSpace(body[:endIndex])
-
-		// Verificar se todas as partes foram recebidas
-		if len(messageParts) == totalFragments {
-			break
-		}
-	}
-
-	// Reconstituir a mensagem
-	var reconstructedMessage strings.Builder
-	for i := 1; i <= totalFragments; i++ {
-		part, exists := messageParts[i]
-		if !exists {
-			return "", fmt.Errorf("fragmento %d está faltando", i)
-		}
-		reconstructedMessage.WriteString(part)
-	}
-
-	return reconstructedMessage.String(), nil
-}
-
 func sendSelfId(conn net.Conn) error {
-	message := EncodePublicKey(userdata.Key.Pk) + "\n"
-	_, err := conn.Write([]byte(message))
+	message := EncodePublicKey(userdata.Key.Pk)
+
+	err := sendMessage(message, conn)
 	if err != nil {
-		fmt.Println("Erro ao enviar mensagem:", err)
+		fmt.Printf("Erro ao enviar SelfID: %v\n", err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func startChat(conn net.Conn, remove func(conn net.Conn)) error {
@@ -277,4 +190,99 @@ func ProcessIpv6(ipv6Address string) (string, error) {
 	// os.WriteFile(SERVER_ADRESS, []byte(listenAddress), 0644)
 
 	return listenAddress, nil
+}
+
+func sendMessage(message string, conn net.Conn) error {
+	messageID := rand.Int63() // Gera um ID único para a mensagem
+	// Dividir a mensagem em fragmentos
+	fragments := []string{}
+	for len(message) > 0 {
+		if len(message) > PAYLOAD_SIZE {
+			fragments = append(fragments, message[:PAYLOAD_SIZE])
+			message = message[PAYLOAD_SIZE:]
+		} else {
+			fragments = append(fragments, message)
+			message = ""
+		}
+	}
+	totalFragments := len(fragments)
+	// Enviar cada fragmento com cabeçalho
+	for i, fragment := range fragments {
+		header := fmt.Sprintf("ID:%d PART:%d/%d ", messageID, i+1, totalFragments)
+		paddedFragment := fragment + MESSAGE_END
+		padding := PAYLOAD_SIZE - len(fragment)
+		paddedFragment += strings.Repeat(" ", padding)
+
+		fullMessage := header + paddedFragment
+		_, err := conn.Write([]byte(fullMessage))
+		if err != nil {
+			fmt.Printf("[ERROR] Erro ao enviar fragmento %d: %v\n", i+1, err)
+			return fmt.Errorf("erro ao enviar fragmento %d: %v", i+1, err)
+		}
+	}
+	return nil
+}
+
+func readMessage(conn net.Conn) (string, error) {
+	messageParts := make(map[int]string)
+	var messageID int64
+	var totalFragments int
+	fmt.Println("[DEBUG] Iniciando leitura da mensagem")
+
+	for {
+		buffer := make([]byte, BUFFER_SIZE)
+		n, err := conn.Read(buffer)
+		if err != nil {
+			fmt.Printf("[ERROR] Erro ao ler do buffer: %v\n", err)
+			return "", err
+		}
+
+		message := string(buffer[:n])
+		// Localizar o delimitador de fim de mensagem
+		endIndex := strings.Index(message, MESSAGE_END)
+		if endIndex == -1 {
+			fmt.Printf("[ERROR] Delimitador %q não encontrado na mensagem\n", MESSAGE_END)
+			return "", fmt.Errorf("delimitador %q não encontrado na mensagem", MESSAGE_END)
+		}
+
+		// Remover padding extra
+		message = strings.TrimSpace(message[:endIndex])
+		// Separar cabeçalho e corpo
+		headerEnd := strings.Index(message, " ")
+		if headerEnd == -1 {
+			fmt.Println("[ERROR] Cabeçalho inválido ou mensagem incompleta")
+			return "", fmt.Errorf("cabeçalho inválido ou mensagem incompleta")
+		}
+
+		header := message[:headerEnd]
+		body := message[headerEnd+1:]
+		// Parse do cabeçalho completo
+		var partNumber int
+		_, err = fmt.Sscanf(header+" "+body, "ID:%d PART:%d/%d", &messageID, &partNumber, &totalFragments)
+		if err != nil {
+			fmt.Printf("[ERROR] Erro ao parsear cabeçalho: %v\n", err)
+			return "", fmt.Errorf("erro ao parsear cabeçalho: %v", err)
+		}
+		// Salvar a parte da mensagem
+		messageParts[partNumber] = body[strings.Index(body, " ")+1:]
+		// Verificar se todas as partes foram recebidas
+		if len(messageParts) == totalFragments {
+			fmt.Println("[DEBUG] Todos os fragmentos recebidos")
+			break
+		}
+	}
+
+	// Reconstituir a mensagem
+	var reconstructedMessage strings.Builder
+	for i := 1; i <= totalFragments; i++ {
+		part, exists := messageParts[i]
+		if !exists {
+			fmt.Printf("[ERROR] Fragmento %d está faltando\n", i)
+			return "", fmt.Errorf("fragmento %d está faltando", i)
+		}
+		reconstructedMessage.WriteString(part)
+	}
+
+	fmt.Println("[DEBUG] Mensagem reconstruída com sucesso")
+	return reconstructedMessage.String(), nil
 }
