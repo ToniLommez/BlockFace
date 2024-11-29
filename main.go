@@ -120,6 +120,10 @@ func showConnections() {
 	}()
 }
 
+func downloadBlockchain() {
+	go nether.RequestBlockchain()
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	// nether.StartLog()
@@ -128,7 +132,6 @@ func main() {
 	fmt.Println("Welcome to nether blockchain - type your command:")
 
 	for {
-		fmt.Print("> ")
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
@@ -165,6 +168,8 @@ func main() {
 			startElection()
 		case "show connections":
 			showConnections()
+		case "download blockchain":
+			downloadBlockchain()
 		default:
 			fmt.Println("No command found")
 		}

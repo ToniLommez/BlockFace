@@ -227,13 +227,11 @@ func readMessage(conn net.Conn) (string, error) {
 	messageParts := make(map[int]string)
 	var messageID int64
 	var totalFragments int
-	fmt.Println("[DEBUG] Iniciando leitura da mensagem")
 
 	for {
 		buffer := make([]byte, BUFFER_SIZE)
 		n, err := conn.Read(buffer)
 		if err != nil {
-			fmt.Printf("[ERROR] Erro ao ler do buffer: %v\n", err)
 			return "", err
 		}
 
@@ -267,7 +265,6 @@ func readMessage(conn net.Conn) (string, error) {
 		messageParts[partNumber] = body[strings.Index(body, " ")+1:]
 		// Verificar se todas as partes foram recebidas
 		if len(messageParts) == totalFragments {
-			fmt.Println("[DEBUG] Todos os fragmentos recebidos")
 			break
 		}
 	}
@@ -283,6 +280,5 @@ func readMessage(conn net.Conn) (string, error) {
 		reconstructedMessage.WriteString(part)
 	}
 
-	fmt.Println("[DEBUG] Mensagem reconstruída com sucesso")
 	return reconstructedMessage.String(), nil
 }
