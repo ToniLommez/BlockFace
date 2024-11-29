@@ -206,7 +206,7 @@ func sendMessage(message string, conn net.Conn) error {
 		}
 	}
 	totalFragments := len(fragments)
-	// Enviar cada fragmento com cabeçalho
+	// Enviar cada fragmento com cabeçalhos
 	for i, fragment := range fragments {
 		header := fmt.Sprintf("ID:%d PART:%d/%d ", messageID, i+1, totalFragments)
 		paddedFragment := fragment + MESSAGE_END

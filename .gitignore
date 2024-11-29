@@ -1,1 +1,2 @@
-face_recognition
+data/facenet_config/qmul_facenet_model.pth
+data/facenet_config/yolov3-wider_16000.weights
