@@ -1,8 +1,10 @@
 package nether
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,16 +36,18 @@ var (
 
 func initHandlers() {
 	handlers = map[string]func(conn net.Conn, parts []string){
-		"LEADER?":      handleLeaderRequisition,
-		"PING":         handlePing,
-		"PONG":         func(conn net.Conn, parts []string) {},
-		"ELECTION":     handleElection,
-		"NEW_ELECTION": handleElectionPreparing,
-		"ELECTED":      handleElected,
-		"WIN_ADVICE":   handleWinAdvice,
-		"WIN":          handleWin,
-		"WIN_ACCEPTED": handleWinAccepted,
-		"WIN_REJECTED": handleWinRejected,
+		"LEADER?":         handleLeaderRequisition,
+		"PING":            handlePing,
+		"PONG":            func(conn net.Conn, parts []string) {},
+		"ELECTION":        handleElection,
+		"NEW_ELECTION":    handleElectionPreparing,
+		"ELECTED":         handleElected,
+		"WIN_ADVICE":      handleWinAdvice,
+		"WIN":             handleWin,
+		"WIN_ACCEPTED":    handleWinAccepted,
+		"WIN_REJECTED":    handleWinRejected,
+		"GET_BLOCKCHAIN":  handleGetBlockchain,
+		"BLOCKCHAIN_DATA": handleBlockchainData,
 	}
 }
 
@@ -326,4 +330,58 @@ func ShowConnections() error {
 		fmt.Printf("nodes   = name: %s | conn %s\n", name[0:10], conn.RemoteAddr())
 	}
 	return nil
+}
+
+func handleGetBlockchain(conn net.Conn, parts []string) {
+	fmt.Println("Solicitação de blockchain recebida, enviando arquivo...")
+	filePath := "data/nether.chain"
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("Erro ao ler arquivo blockchain: %v\n", err)
+		return
+	}
+	sendMessage(fmt.Sprintf("BLOCKCHAIN_DATA %s", base64.StdEncoding.EncodeToString(data)), conn)
+}
+
+func handleBlockchainData(conn net.Conn, parts []string) {
+	if len(parts) < 2 {
+		fmt.Println("Dados da blockchain recebidos em formato inválido")
+		return
+	}
+
+	dataStr := ""
+	for _, p := range parts[1:] {
+		dataStr += p + " "
+	}
+	dataStr = dataStr[:len(dataStr)-2]
+
+	fmt.Println("Recebendo e salvando o arquivo blockchain...")
+	data, err := base64.StdEncoding.DecodeString(dataStr)
+	if err != nil {
+		fmt.Printf("Erro ao decodificar dados do arquivo: %v\n", err)
+		return
+	}
+
+	filePath := "data/nether.chain"
+	err = os.WriteFile(filePath, data, 0644)
+	if err != nil {
+		fmt.Printf("Erro ao salvar arquivo: %v\n", err)
+		return
+	}
+
+	fmt.Println("Blockchain salva com sucesso!")
+}
+
+func RequestBlockchain() {
+	leaders_lock.Lock()
+	defer leaders_lock.Unlock()
+
+	leaderConn, _, leaderExists := getAny(leaders)
+	if !leaderExists {
+		fmt.Println("Nenhum líder disponível para solicitar a blockchain.")
+		return
+	}
+
+	fmt.Println("Solicitando blockchain ao líder:", leaderConn.RemoteAddr())
+	sendMessage("GET_BLOCKCHAIN", leaderConn)
 }

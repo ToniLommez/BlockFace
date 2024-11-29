@@ -1,8 +1,8 @@
 package nether
 
 import (
-	"bufio"
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
 	"time"
@@ -11,6 +11,10 @@ import (
 const (
 	SERVER_ADRESS string = "data/server.conf"
 	SERVER_PORT   string = "666"
+	MESSAGE_END   string = "<END_OF_MESSAGE>"
+	BUFFER_SIZE   int    = 4096
+	HEADER_SIZE   int    = 128
+	PAYLOAD_SIZE  int    = BUFFER_SIZE - HEADER_SIZE
 )
 
 var (
@@ -71,8 +75,6 @@ func connect(ipv6 string) (net.Conn, error) {
 		Timeout:   5 * time.Second,
 	}
 
-	fmt.Printf("conectando usando %v\n", dialer)
-
 	conn, err := dialer.Dial("tcp", serverAddress)
 
 	if err != nil {
@@ -110,15 +112,94 @@ func clientHandle(conn net.Conn) net.Conn {
 	return conn
 }
 
-func readMessage(conn net.Conn) (string, error) {
-	msg, err := bufio.NewReader(conn).ReadString('\n')
-	return strings.TrimSuffix(msg, "\n"), err
+func sendMessage(message string, conn net.Conn) error {
+	messageID := rand.Int63() // Gera um ID único para a mensagem
+
+	// Dividir a mensagem em fragmentos
+	fragments := []string{}
+	for len(message) > 0 {
+		if len(message) > PAYLOAD_SIZE {
+			fragments = append(fragments, message[:PAYLOAD_SIZE])
+			message = message[PAYLOAD_SIZE:]
+		} else {
+			fragments = append(fragments, message)
+			message = ""
+		}
+	}
+
+	totalFragments := len(fragments)
+
+	// Enviar cada fragmento com cabeçalho
+	for i, fragment := range fragments {
+		header := fmt.Sprintf("ID:%d PART:%d/%d ", messageID, i+1, totalFragments)
+		paddedFragment := fragment + MESSAGE_END
+		padding := PAYLOAD_SIZE - len(fragment)
+		paddedFragment += strings.Repeat(" ", padding)
+
+		fullMessage := header + paddedFragment
+		_, err := conn.Write([]byte(fullMessage))
+		if err != nil {
+			return fmt.Errorf("erro ao enviar fragmento %d: %v", i+1, err)
+		}
+	}
+	return nil
 }
 
-func sendMessage(message string, conn net.Conn) error {
-	message += "\n"
-	_, err := conn.Write([]byte(message))
-	return err
+func readMessage(conn net.Conn) (string, error) {
+	messageParts := make(map[int]string)
+	var messageID int64
+	var totalFragments int
+
+	for {
+		buffer := make([]byte, BUFFER_SIZE)
+		n, err := conn.Read(buffer)
+		if err != nil {
+			return "", err
+		}
+
+		message := string(buffer[:n])
+
+		// Extrair cabeçalho
+		headerEnd := strings.Index(message, " ")
+		if headerEnd == -1 {
+			return "", fmt.Errorf("cabeçalho inválido na mensagem")
+		}
+		header := message[:headerEnd]
+		body := message[headerEnd+1:]
+
+		// Parse do cabeçalho
+		var partNumber int
+		_, err = fmt.Sscanf(header, "ID:%d PART:%d/%d", &messageID, &partNumber, &totalFragments)
+		if err != nil {
+			return "", fmt.Errorf("erro ao parsear cabeçalho: %v", err)
+		}
+
+		// Localizar o delimitador
+		endIndex := strings.Index(body, MESSAGE_END)
+		if endIndex == -1 {
+			return "", fmt.Errorf("delimitador %q não encontrado na mensagem", MESSAGE_END)
+		}
+
+		// Salvar a parte da mensagem
+		messageParts[partNumber] = strings.TrimSpace(body[:endIndex])
+
+		// Verificar se todas as partes foram recebidas
+		if len(messageParts) == totalFragments {
+			break
+		}
+	}
+
+	// Reconstituir a mensagem
+	var reconstructedMessage strings.Builder
+	for i := 1; i <= totalFragments; i++ {
+		part, exists := messageParts[i]
+		if !exists {
+			return "", fmt.Errorf("fragmento %d está faltando", i)
+		}
+		reconstructedMessage.WriteString(part)
+	}
+
+	return reconstructedMessage.String(), nil
 }
 
 func sendSelfId(conn net.Conn) error {
@@ -138,7 +219,6 @@ func startChat(conn net.Conn, remove func(conn net.Conn)) error {
 		if err != nil {
 			break
 		}
-		fmt.Println("Mensagem recebida:", msg)
 		go dealWithRequisition(msg, conn)
 	}
 
