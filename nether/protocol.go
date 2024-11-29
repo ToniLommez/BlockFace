@@ -124,7 +124,7 @@ func EnterToNetwork(ipv6 string) error {
 	go func() {
 		fmt.Printf("Inicializando o proprio server para receber entradas\n")
 		if err := startServer(); err != nil {
-			fmt.Println(err)
+			fmt.Printf("%s\n", err)
 		}
 	}()
 
@@ -161,7 +161,6 @@ func broadcastNodes(message string) {
 }
 
 func PingAll() {
-	fmt.Printf("Realizando ping em broadcast\n")
 	broadcast("PING")
 }
 
@@ -209,11 +208,10 @@ func handleElection(conn net.Conn, parts []string) {
 
 func handleWinAdvice(conn net.Conn, parts []string) {
 	if !i_am_leader {
-		fmt.Println("only leaders can start -handle a win advice-")
+		fmt.Printf("only leaders can start -handle a win advice-\n")
 		return
 	}
 
-	fmt.Printf("Adicionando Win valido ao sistema\n")
 	new_leaders_lock.Lock()
 
 	leader_ipv6 := parts[1]
@@ -228,18 +226,18 @@ func handleWinAdvice(conn net.Conn, parts []string) {
 		}
 		broadcast(message)
 	}
-	fmt.Printf("Destravando acesso ao array de new_leaders\n")
+
 	new_leaders_lock.Unlock()
 }
 
 func handleWin(conn net.Conn, parts []string) {
 	if !i_am_leader {
-		fmt.Println("only leaders can start -handle a WIN-")
+		fmt.Printf("only leaders can start -handle a WIN-\n")
 		return
 	}
 
 	if !under_election {
-		fmt.Println("cannot handle win while not on election")
+		fmt.Printf("cannot handle win while not on election\n")
 		sendMessage("WIN_REJECTED", conn)
 		return
 	}
@@ -333,7 +331,7 @@ func ShowConnections() error {
 }
 
 func handleGetBlockchain(conn net.Conn, parts []string) {
-	fmt.Println("Solicitação de blockchain recebida, enviando arquivo...")
+	fmt.Printf("Solicitação de blockchain recebida, enviando arquivo...\n")
 	filePath := "data/nether.chain"
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -342,17 +340,12 @@ func handleGetBlockchain(conn net.Conn, parts []string) {
 	}
 
 	encodedData := base64.StdEncoding.EncodeToString(data)
-	if len(encodedData) > 100 {
-		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", encodedData[:100])
-	} else {
-		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", encodedData[:])
-	}
 	sendMessage(fmt.Sprintf("BLOCKCHAIN_DATA %s", encodedData), conn)
 }
 
 func handleBlockchainData(conn net.Conn, parts []string) {
 	if len(parts) < 2 {
-		fmt.Println("Dados da blockchain recebidos em formato inválido")
+		fmt.Printf("Dados da blockchain recebidos em formato inválido\n")
 		return
 	}
 
@@ -360,8 +353,7 @@ func handleBlockchainData(conn net.Conn, parts []string) {
 	dataStr := strings.Join(parts[1:], " ")
 	dataStr = strings.TrimSpace(dataStr) // Remover espaços extras
 
-	fmt.Println("[DEBUG] Dados reconstruídos recebidos (parcial):", dataStr[:100]) // Mostra os primeiros 100 caracteres
-	fmt.Println("Recebendo e salvando o arquivo blockchain...")
+	fmt.Printf("Recebendo e salvando o arquivo blockchain...\n")
 
 	// Decodificar os dados
 	data, err := base64.StdEncoding.DecodeString(dataStr)
@@ -378,7 +370,7 @@ func handleBlockchainData(conn net.Conn, parts []string) {
 		return
 	}
 
-	fmt.Println("Blockchain salva com sucesso!")
+	fmt.Printf("Blockchain salva com sucesso!\n")
 }
 
 func RequestBlockchain() {
@@ -387,10 +379,10 @@ func RequestBlockchain() {
 
 	leaderConn, _, leaderExists := getAny(leaders)
 	if !leaderExists {
-		fmt.Println("Nenhum líder disponível para solicitar a blockchain.")
+		fmt.Printf("Nenhum líder disponível para solicitar a blockchain.\n")
 		return
 	}
 
-	fmt.Println("Solicitando blockchain ao líder:", leaderConn.RemoteAddr())
+	fmt.Printf("Solicitando blockchain ao líder: %s\n", leaderConn.RemoteAddr())
 	sendMessage("GET_BLOCKCHAIN", leaderConn)
 }

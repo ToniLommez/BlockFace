@@ -286,10 +286,5 @@ func readMessage(conn net.Conn) (string, error) {
 	}
 
 	finalMessage := reconstructedMessage.String()
-	if len(finalMessage) > 100 {
-		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", finalMessage[:100])
-	} else {
-		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", finalMessage[:])
-	}
 	return finalMessage, nil
 }
