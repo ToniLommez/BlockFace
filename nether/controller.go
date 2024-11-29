@@ -18,6 +18,7 @@ var (
 
 func Start() {
 	initHandlers()
+	initServer()
 }
 
 func StartLog() {
@@ -61,16 +62,38 @@ func LoadBlockchain() {
 }
 
 func WriteRandomBlock() {
-	n := 2 + rand.Intn(4)
-	sl := make([]StorageLocation, n)
-	for i := 0; i < n; i++ {
-		sl[i] = *NewStorageLocation(userdata.Key.Pk, uint64(rand.Intn(101)))
+	// Random Size
+	numEmbeddings := 2 + rand.Intn(4)
+	numImages := 1 + rand.Intn(3)
+
+	// Random embeddings
+	embeddings := make([]Embedding, numEmbeddings)
+	for i := 0; i < numEmbeddings; i++ {
+		var data [128]float64
+		for j := 0; j < 128; j++ {
+			data[j] = float64(j + 1)
+		}
+
+		tmp, _ := newEmbedding(data)
+		embeddings[i] = *tmp
 	}
-	WriteBlock(NewDataSet(sl))
+
+	// Random Images
+	images := make([]Image, numImages)
+	for i := 0; i < numImages; i++ {
+		img, err := generateRandomImage()
+		if err != nil {
+			// fmt.Printf("Erro ao gerar imagem aleatória: %v\n", err)
+			return
+		}
+		images[i] = *img
+	}
+
+	WriteBlock(NewStorage(embeddings, images))
 }
 
-func WriteBlock(data *DataSet) {
-	b, _ := NewBlock(reader.ReadLastBlock(), userdata.Key, *data)
+func WriteBlock(storage *Storage) {
+	b, _ := NewBlock(reader.ReadLastBlock(), userdata.Key, *storage)
 	reader.WriteBlock(b)
 }
 
@@ -82,6 +105,6 @@ func PrintBlockchain() {
 	fmt.Printf("%v\n", reader.current)
 	for reader.ReadNext() {
 		fmt.Printf("Block [%03d]:\n", reader.current.Index)
-		fmt.Printf("%v\n", reader.current)
+		fmt.Printf("%s\n", reader.current)
 	}
 }

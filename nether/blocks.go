@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"math/big"
 	"time"
 )
@@ -18,26 +19,37 @@ type Block struct {
 	Hash      Hash
 	Signature Signature
 	PubKey    PublicKey
-	Data      DataSet
+	Storage   Storage
 }
 
 func (b *Block) calculateHash() {
 	record := make([]byte, 0)
 	index := make([]byte, 8)
 	timestamp := make([]byte, 8)
-	pointer := make([]byte, 8)
 
 	binary.LittleEndian.PutUint64(index, b.Index)
 	binary.LittleEndian.PutUint64(timestamp, b.Timestamp)
 
-	record = append(record, []byte(index)...)
-	record = append(record, []byte(timestamp)...)
+	record = append(record, index...)
+	record = append(record, timestamp...)
 	record = append(record, b.PrevHash[:]...)
 
-	for _, v := range b.Data.Values {
-		record = append(record, []byte(v.Key[:])...)
-		binary.LittleEndian.PutUint64(pointer, v.Pointer)
-		record = append(record, pointer...)
+	for _, embedding := range b.Storage.Embeddings {
+		serializedEmbedding, err := embedding.Serialize()
+		if err != nil {
+			fmt.Printf("Erro ao serializar embedding: %v\n", err)
+			continue
+		}
+		record = append(record, serializedEmbedding...)
+	}
+
+	for _, image := range b.Storage.Images {
+		serializedImage, err := image.Serialize()
+		if err != nil {
+			fmt.Printf("Erro ao serializar imagem: %v\n", err)
+			continue
+		}
+		record = append(record, serializedImage...)
 	}
 
 	b.Hash = sha256.Sum256(record)
@@ -71,9 +83,14 @@ func (b *Block) computeSize() {
 	hash := CIPHER_SIZE
 	signature := SIGNATURE_SIZE
 	pubKey := PUBLIC_KEY_SIZE
-	data := int(b.Data.Count) * STORAGE_LOCATION_SIZE
 
-	b.BlockSize = uint64(blockSize + index + timestamp + prevHash + hash + signature + pubKey + data)
+	countEmbeddings := 1
+	countImages := 1
+	embeddingsSize := len(b.Storage.Embeddings) * EMBEDDING_SIZE
+	imagesSize := len(b.Storage.Images) * IMAGE_SIZE
+	storageSize := countEmbeddings + countImages + embeddingsSize + imagesSize
+
+	b.BlockSize = uint64(blockSize + index + timestamp + prevHash + hash + signature + pubKey + storageSize)
 }
 
 func (b *Block) Serialize() []byte {
@@ -90,8 +107,8 @@ func (b *Block) Serialize() []byte {
 	buf.Write(b.Signature[:])
 	buf.Write(b.PubKey[:])
 
-	// Data
-	buf.Write(b.Data.Serialize())
+	// Storage
+	buf.Write(b.Storage.Serialize())
 
 	return buf.Bytes()
 }
@@ -111,20 +128,20 @@ func Deserialize(data []byte) *Block {
 	buf.Read(b.Signature[:])
 	buf.Read(b.PubKey[:])
 
-	// Data
-	b.Data.Deserialize(data[len(data)-buf.Len():])
+	// Storage
+	b.Storage.Deserialize(data[len(data)-buf.Len():])
 
 	return &b
 }
 
-func NewBlock(oldBlock *Block, k Key, data DataSet) (*Block, error) {
+func NewBlock(oldBlock *Block, k Key, store Storage) (*Block, error) {
 	newBlock := &Block{
 		BlockSize: 0,
 		Index:     oldBlock.Index + 1,
 		Timestamp: uint64(time.Now().Unix()),
 		PrevHash:  oldBlock.Hash,
 		PubKey:    k.Pk,
-		Data:      data,
+		Storage:   store,
 	}
 
 	newBlock.calculateHash()
@@ -138,7 +155,6 @@ func NewBlock(oldBlock *Block, k Key, data DataSet) (*Block, error) {
 	return newBlock, nil
 }
 
-// NewGenesis generate the first block with a secure random for it's hash
 func NewGenesis(k Key, genesisHash Hash) *Block {
 	genesis := &Block{
 		BlockSize: 0,
@@ -146,7 +162,7 @@ func NewGenesis(k Key, genesisHash Hash) *Block {
 		Timestamp: uint64(time.Now().Unix()),
 		PrevHash:  genesisHash,
 		PubKey:    k.Pk,
-		Data:      DataSet{},
+		Storage:   Storage{},
 	}
 
 	genesis.calculateHash()

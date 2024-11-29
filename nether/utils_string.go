@@ -10,24 +10,11 @@ import (
 
 func (b *Block) String() string {
 	return fmt.Sprintf(
-		"\tBlockSize: \t%v\n\tIndex: \t\t%v\n\tTimestamp: \t%v\n\tPrevHash: \t%s\n\tHash: \t\t%s\n\tSignature: \t%s\n\tPubKey: \t%s\n\tData: \t%v",
+		"\tBlockSize: \t%v\n\tIndex: \t\t%v\n\tTimestamp: \t%v\n\tPrevHash: \t%s\n\tHash: \t\t%s\n\tSignature: \t%s\n\tPubKey: \t%s\n\tStorage: \t%v",
 		b.BlockSize, b.Index, time.Unix(int64(b.Timestamp), 0).Format("02-01-2006 15:04:05"),
 		base64.StdEncoding.EncodeToString(b.PrevHash[:]), base64.StdEncoding.EncodeToString(b.Hash[:]),
 		base64.StdEncoding.EncodeToString(b.Signature[:]), base64.StdEncoding.EncodeToString(b.PubKey[:]),
-		b.Data)
-}
-
-func (d DataSet) String() string {
-	valuesStr := ""
-	for i, val := range d.Values {
-		valuesStr += fmt.Sprintf("\t\t\tValue [%02d]: \t%v\n", i+1, val)
-	}
-
-	return fmt.Sprintf("\tCount: %03d \n%s", d.Count, valuesStr)
-}
-
-func (s StorageLocation) String() string {
-	return fmt.Sprintf("Key: %s, \n\t\t\t\t\tPointer: %d", base64.StdEncoding.EncodeToString(s.Key[:]), s.Pointer)
+		b.Storage.String())
 }
 
 func (m *UserData) String() string {
@@ -35,10 +22,6 @@ func (m *UserData) String() string {
 		base64.StdEncoding.EncodeToString(m.Hash[:]),
 		base64.StdEncoding.EncodeToString(m.Key.Sk[:]),
 		base64.StdEncoding.EncodeToString(m.Key.Pk[:]))
-}
-
-func EncodePublicKey(src [64]byte) string {
-	return base64.StdEncoding.EncodeToString(src[:])
 }
 
 func (k *Key) String() string {
@@ -60,6 +43,47 @@ func (r NetherReader) String() string {
 		"\tFile: %s\n\tCurrent Block: %s\n\tSize: %d\n\tLocal Size: %d\n\tLast Block Index: %d\n\tLast Block Offset: %x\n\tFirst Block Hash: %s",
 		fileInfo, blockInfo, r.size, r.localSize, r.lastBlockIndex, r.lastBlockOffset, base64.StdEncoding.EncodeToString(r.firstBlockHash[:]),
 	)
+}
+
+func (img *Image) String() string {
+	return "Image ([hehe]...)"
+}
+
+func (e *Embedding) String() string {
+	intRepresentation := make([]int, len(e.data))
+	for i, v := range e.data {
+		intRepresentation[i] = int(v)
+	}
+
+	return fmt.Sprintf(
+		"(ID: %s, Data: %v)",
+		base64.StdEncoding.EncodeToString(e.id[:]),
+		intRepresentation[:5],
+	)
+}
+
+func (s *Storage) String() string {
+	embeddingsStr := make([]string, len(s.Embeddings))
+	for i, embedding := range s.Embeddings {
+		embeddingsStr[i] = embedding.String()
+	}
+
+	imagesStr := make([]string, len(s.Images))
+	for i, img := range s.Images {
+		imagesStr[i] = img.String()
+	}
+
+	return fmt.Sprintf(
+		"Storage (\n\tCountEmbeddings: %d\n\tCountImages: %d\n\tEmbeddings: [%s]\n\tImages: [%s]\n)",
+		s.CountEmbeddings,
+		s.CountImages,
+		strings.Join(embeddingsStr, ", "),
+		strings.Join(imagesStr, ", "),
+	)
+}
+
+func EncodePublicKey(src [64]byte) string {
+	return base64.StdEncoding.EncodeToString(src[:])
 }
 
 func randomString(minLength, maxLength int) string {

@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"math/big"
 )
@@ -57,19 +56,6 @@ func BytesToEcdsaPublicKey(keyBytes PublicKey) *ecdsa.PublicKey {
 		X:     new(big.Int).SetBytes(keyBytes[:32]),
 		Y:     new(big.Int).SetBytes(keyBytes[32:]),
 	}
-}
-
-func CipherPointer(k Key, pointer uint64) *StorageLocation {
-	v1 := binary.LittleEndian.Uint64(k.Sk[0:8])
-	v2 := binary.LittleEndian.Uint64(k.Sk[8:16])
-	v3 := binary.LittleEndian.Uint64(k.Sk[16:24])
-	v4 := binary.LittleEndian.Uint64(k.Sk[24:32])
-
-	v := v1 ^ v2 ^ v3 ^ v4
-
-	cipher := pointer ^ v
-
-	return NewStorageLocation(k.Pk, cipher)
 }
 
 func HashPassword(password string) [32]byte {
