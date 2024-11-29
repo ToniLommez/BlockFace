@@ -303,7 +303,7 @@ func handleElected(conn net.Conn, parts []string) {
 			go startChat(new_leader_conn, removeLeader)
 		}
 	} else {
-		fmt.Printf("Nao sou lider e estou escolhendo um lider aleatorio para conectar")
+		fmt.Printf("Nao sou lider e estou escolhendo um lider aleatorio para conectar\n")
 		for _, leader := range new_leaders {
 			fmt.Printf("Conectando a: %s\n", leader)
 			new_leader_conn, err := connect(leader)

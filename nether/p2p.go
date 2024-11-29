@@ -62,7 +62,16 @@ func handleServerConnections(listener net.Listener) {
 func connect(ipv6 string) (net.Conn, error) {
 	serverAddress := DigestIpv6(ipv6)
 
-	conn, err := net.Dial("tcp", serverAddress)
+	localAddr := &net.TCPAddr{
+		IP: net.ParseIP(self_ipv6),
+	}
+	dialer := &net.Dialer{
+		LocalAddr: localAddr,
+		Timeout:   5 * time.Second,
+	}
+
+	conn, err := dialer.Dial("tcp", serverAddress)
+
 	if err != nil {
 		fmt.Println("Erro ao conectar ao servidor:", err)
 		return nil, err
