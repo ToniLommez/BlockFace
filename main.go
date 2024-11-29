@@ -124,6 +124,10 @@ func downloadBlockchain() {
 	go nether.RequestBlockchain()
 }
 
+func startEndpoint() {
+	go nether.InitServer()
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	// nether.StartLog()
@@ -154,8 +158,8 @@ func main() {
 			nether.NewBlockchain()
 		case "load blockchain":
 			nether.LoadBlockchain()
-		case "write random block":
-			nether.WriteRandomBlock()
+		/* case "write random block":
+		nether.WriteRandomBlock() */
 		case "show blockchain":
 			nether.PrintBlockchain()
 		case "start server":
@@ -170,6 +174,8 @@ func main() {
 			showConnections()
 		case "download blockchain":
 			downloadBlockchain()
+		case "start endpoint":
+			startEndpoint()
 		default:
 			fmt.Println("No command found")
 		}

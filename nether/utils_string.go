@@ -45,10 +45,6 @@ func (r NetherReader) String() string {
 	)
 }
 
-func (img *Image) String() string {
-	return "Image ([hehe]...)"
-}
-
 func (e *Embedding) String() string {
 	intRepresentation := make([]int, len(e.data))
 	for i, v := range e.data {
@@ -63,22 +59,10 @@ func (e *Embedding) String() string {
 }
 
 func (s *Storage) String() string {
-	embeddingsStr := make([]string, len(s.Embeddings))
-	for i, embedding := range s.Embeddings {
-		embeddingsStr[i] = embedding.String()
-	}
-
-	imagesStr := make([]string, len(s.Images))
-	for i, img := range s.Images {
-		imagesStr[i] = img.String()
-	}
-
 	return fmt.Sprintf(
-		"Storage (\n\tCountEmbeddings: %d\n\tCountImages: %d\n\tEmbeddings: [%s]\n\tImages: [%s]\n)",
-		s.CountEmbeddings,
-		s.CountImages,
-		strings.Join(embeddingsStr, ", "),
-		strings.Join(imagesStr, ", "),
+		"Storage (\n\tEmbedding: %s\n\tImage: %s\n)",
+		s.Embedding.String(),
+		s.Image.data,
 	)
 }
 

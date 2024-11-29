@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
-	"fmt"
 	"math/big"
 	"time"
 )
@@ -34,23 +33,11 @@ func (b *Block) calculateHash() {
 	record = append(record, timestamp...)
 	record = append(record, b.PrevHash[:]...)
 
-	for _, embedding := range b.Storage.Embeddings {
-		serializedEmbedding, err := embedding.Serialize()
-		if err != nil {
-			fmt.Printf("Erro ao serializar embedding: %v\n", err)
-			continue
-		}
-		record = append(record, serializedEmbedding...)
-	}
+	serializedEmbedding, _ := b.Storage.Embedding.Serialize()
+	record = append(record, serializedEmbedding...)
 
-	for _, image := range b.Storage.Images {
-		serializedImage, err := image.Serialize()
-		if err != nil {
-			fmt.Printf("Erro ao serializar imagem: %v\n", err)
-			continue
-		}
-		record = append(record, serializedImage...)
-	}
+	serializedImage, _ := b.Storage.Image.Serialize()
+	record = append(record, serializedImage...)
 
 	b.Hash = sha256.Sum256(record)
 }
@@ -84,11 +71,9 @@ func (b *Block) computeSize() {
 	signature := SIGNATURE_SIZE
 	pubKey := PUBLIC_KEY_SIZE
 
-	countEmbeddings := 1
-	countImages := 1
-	embeddingsSize := len(b.Storage.Embeddings) * EMBEDDING_SIZE
-	imagesSize := len(b.Storage.Images) * IMAGE_SIZE
-	storageSize := countEmbeddings + countImages + embeddingsSize + imagesSize
+	embeddingsSize := EMBEDDING_SIZE
+	imagesSize := 200
+	storageSize := embeddingsSize + imagesSize
 
 	b.BlockSize = uint64(blockSize + index + timestamp + prevHash + hash + signature + pubKey + storageSize)
 }

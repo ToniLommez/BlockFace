@@ -5,19 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
+	"os"
 )
 
 type RequestData struct {
-	Embeddings [][]float64 `json:"embeddings"`
-	Images     []string    `json:"images"`
+	Embeddings []float64 `json:"embeddings"`
+	ImagePaths string    `json:"image_path"`
 }
 
-var (
-	mu sync.Mutex
-)
-
-func initServer() {
+func InitServer() {
 	http.HandleFunc("/add", addToBlockchainHandler)
 
 	fmt.Println("Servidor iniciado em http://localhost:8080")
@@ -59,35 +55,34 @@ func addToBlockchainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var embeddings []Embedding
-	for _, data := range requestData.Embeddings {
-		if len(data) != 128 {
-			http.Error(w, "Cada embedding deve conter exatamente 128 floats.", http.StatusBadRequest)
-			return
-		}
-
-		var embeddingData [128]float64
-		copy(embeddingData[:], data)
-
-		embedding, err := newEmbedding(embeddingData)
-		if err != nil {
-			http.Error(w, "Erro ao criar embedding: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		embeddings = append(embeddings, *embedding)
+	// Validar embedding
+	if len(requestData.Embeddings) != 128 {
+		http.Error(w, "O embedding deve conter exatamente 128 floats.", http.StatusBadRequest)
+		return
 	}
 
-	var images []Image
-	for _, encodedImage := range requestData.Images {
-		img, err := newImage(encodedImage)
-		if err != nil {
-			http.Error(w, "Erro ao processar imagem em Base64: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		images = append(images, *img)
+	var embeddingData [128]float64
+	copy(embeddingData[:], requestData.Embeddings)
+
+	embedding, err := newEmbedding(embeddingData)
+	if err != nil {
+		http.Error(w, "Erro ao criar embedding: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	mu.Lock()
-	WriteBlock(NewStorage(embeddings, images))
-	mu.Unlock()
+	// Validar caminho da imagem
+	if _, err := os.Stat(requestData.ImagePaths); os.IsNotExist(err) {
+		http.Error(w, fmt.Sprintf("O arquivo de imagem não existe no caminho especificado: %s", requestData.ImagePaths), http.StatusBadRequest)
+		return
+	}
+
+	image := Image{data: requestData.ImagePaths}
+
+	// Adicionar ao blockchain
+	WriteBlock(NewStorage(*embedding, image))
+	fmt.Printf("Novo rosto adicionado a blockchain\n")
+
+	// Responder ao cliente
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Dados adicionados ao blockchain com sucesso."))
 }

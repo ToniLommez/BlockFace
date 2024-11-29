@@ -3,7 +3,6 @@ package nether
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 )
 
@@ -18,7 +17,6 @@ var (
 
 func Start() {
 	initHandlers()
-	initServer()
 }
 
 func StartLog() {
@@ -61,7 +59,7 @@ func LoadBlockchain() {
 	reader, _ = NewReader()
 }
 
-func WriteRandomBlock() {
+/* func WriteRandomBlock() {
 	// Random Size
 	numEmbeddings := 2 + rand.Intn(4)
 	numImages := 1 + rand.Intn(3)
@@ -90,7 +88,7 @@ func WriteRandomBlock() {
 	}
 
 	WriteBlock(NewStorage(embeddings, images))
-}
+} */
 
 func WriteBlock(storage *Storage) {
 	b, _ := NewBlock(reader.ReadLastBlock(), userdata.Key, *storage)
