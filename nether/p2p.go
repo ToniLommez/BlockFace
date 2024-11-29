@@ -65,10 +65,13 @@ func connect(ipv6 string) (net.Conn, error) {
 	localAddr := &net.TCPAddr{
 		IP: net.ParseIP(self_ipv6),
 	}
+
 	dialer := &net.Dialer{
 		LocalAddr: localAddr,
 		Timeout:   5 * time.Second,
 	}
+
+	fmt.Printf("conectando usando %v\n", dialer)
 
 	conn, err := dialer.Dial("tcp", serverAddress)
 
