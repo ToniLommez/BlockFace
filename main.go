@@ -156,7 +156,7 @@ func main() {
 			nether.LoadBlockchain()
 		case "write random block":
 			nether.WriteRandomBlock()
-		case "print blockchain":
+		case "show blockchain":
 			nether.PrintBlockchain()
 		case "start server":
 			startServer()

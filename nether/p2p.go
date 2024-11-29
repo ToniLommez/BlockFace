@@ -236,6 +236,7 @@ func readMessage(conn net.Conn) (string, error) {
 		}
 
 		message := string(buffer[:n])
+
 		// Localizar o delimitador de fim de mensagem
 		endIndex := strings.Index(message, MESSAGE_END)
 		if endIndex == -1 {
@@ -245,6 +246,7 @@ func readMessage(conn net.Conn) (string, error) {
 
 		// Remover padding extra
 		message = strings.TrimSpace(message[:endIndex])
+
 		// Separar cabeçalho e corpo
 		headerEnd := strings.Index(message, " ")
 		if headerEnd == -1 {
@@ -254,6 +256,7 @@ func readMessage(conn net.Conn) (string, error) {
 
 		header := message[:headerEnd]
 		body := message[headerEnd+1:]
+
 		// Parse do cabeçalho completo
 		var partNumber int
 		_, err = fmt.Sscanf(header+" "+body, "ID:%d PART:%d/%d", &messageID, &partNumber, &totalFragments)
@@ -261,8 +264,10 @@ func readMessage(conn net.Conn) (string, error) {
 			fmt.Printf("[ERROR] Erro ao parsear cabeçalho: %v\n", err)
 			return "", fmt.Errorf("erro ao parsear cabeçalho: %v", err)
 		}
+
 		// Salvar a parte da mensagem
 		messageParts[partNumber] = body[strings.Index(body, " ")+1:]
+
 		// Verificar se todas as partes foram recebidas
 		if len(messageParts) == totalFragments {
 			break
@@ -280,5 +285,11 @@ func readMessage(conn net.Conn) (string, error) {
 		reconstructedMessage.WriteString(part)
 	}
 
-	return reconstructedMessage.String(), nil
+	finalMessage := reconstructedMessage.String()
+	if len(finalMessage) > 100 {
+		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", finalMessage[:100])
+	} else {
+		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", finalMessage[:])
+	}
+	return finalMessage, nil
 }

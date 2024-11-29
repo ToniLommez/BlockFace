@@ -340,7 +340,14 @@ func handleGetBlockchain(conn net.Conn, parts []string) {
 		fmt.Printf("Erro ao ler arquivo blockchain: %v\n", err)
 		return
 	}
-	sendMessage(fmt.Sprintf("BLOCKCHAIN_DATA %s", base64.StdEncoding.EncodeToString(data)), conn)
+
+	encodedData := base64.StdEncoding.EncodeToString(data)
+	if len(encodedData) > 100 {
+		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", encodedData[:100])
+	} else {
+		fmt.Printf("[DEBUG] Dados codificados em Base64: %s\n", encodedData[:])
+	}
+	sendMessage(fmt.Sprintf("BLOCKCHAIN_DATA %s", encodedData), conn)
 }
 
 func handleBlockchainData(conn net.Conn, parts []string) {
@@ -349,19 +356,21 @@ func handleBlockchainData(conn net.Conn, parts []string) {
 		return
 	}
 
-	dataStr := ""
-	for _, p := range parts[1:] {
-		dataStr += p + " "
-	}
-	dataStr = dataStr[:len(dataStr)-2]
+	// Reconstruir os dados da mensagem
+	dataStr := strings.Join(parts[1:], " ")
+	dataStr = strings.TrimSpace(dataStr) // Remover espaços extras
 
+	fmt.Println("[DEBUG] Dados reconstruídos recebidos (parcial):", dataStr[:100]) // Mostra os primeiros 100 caracteres
 	fmt.Println("Recebendo e salvando o arquivo blockchain...")
+
+	// Decodificar os dados
 	data, err := base64.StdEncoding.DecodeString(dataStr)
 	if err != nil {
 		fmt.Printf("Erro ao decodificar dados do arquivo: %v\n", err)
 		return
 	}
 
+	// Salvar o arquivo
 	filePath := "data/nether.chain"
 	err = os.WriteFile(filePath, data, 0644)
 	if err != nil {
