@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -10,6 +11,27 @@ import (
 	"strconv"
 	"strings"
 )
+
+func help() {
+	fmt.Println("Commands:")
+	fmt.Println("help ---------------- You're here")
+	fmt.Println("clear --------------- clear the console")
+	fmt.Println("register ------------ register a new user")
+	fmt.Println("login --------------- login with a user")
+	fmt.Println("test userdata ------- test userdata sanity checks")
+	fmt.Println("show userdata ------- print userdata in console")
+	fmt.Println("new blockchain ------ create a new blockchain")
+	fmt.Println("load blockchain ----- load blockchain from secundary memory to primary memory")
+	fmt.Println("show blockchain ----- print blockchain in console")
+	fmt.Println("start server -------- start server")
+	fmt.Println("start client -------- start client")
+	fmt.Println("ping all ------------ ping all connections")
+	fmt.Println("start election ------ start election for new leaders(only a leader can start an election)")
+	fmt.Println("show connections ---- show all connections of the node")
+	fmt.Println("download blockchain - download blockchain from a leader")
+	fmt.Println("start endpoint ------ start endpoint connection to receive camera aplication infos")
+	fmt.Println("exit ---------------- exit the program")
+}
 
 func clear() {
 	// Determina o sistema operacional
@@ -64,7 +86,7 @@ func testUserdata() {
 	fmt.Println(nether.GetUserdata())
 }
 
-func seeUserdata() {
+func showUserdata() {
 	fmt.Println(nether.GetUserdata())
 }
 
@@ -142,6 +164,8 @@ func main() {
 		switch input {
 		case "exit":
 			return
+		case "help":
+			help()
 		case "clear":
 			clear()
 		case "register":
@@ -152,14 +176,12 @@ func main() {
 			autoLogin()
 		case "test userdata":
 			testUserdata()
-		case "see userdata":
-			seeUserdata()
+		case "show userdata":
+			showUserdata()
 		case "new blockchain":
 			nether.NewBlockchain()
 		case "load blockchain":
 			nether.LoadBlockchain()
-		/* case "write random block":
-		nether.WriteRandomBlock() */
 		case "show blockchain":
 			nether.PrintBlockchain()
 		case "start server":
