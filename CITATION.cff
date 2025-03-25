@@ -1,0 +1,31 @@
+cff-version: 1.0.1
+message: Please cite this software using these metadata.
+title: "BLOCKFACE: UM SISTEMA DE MONITORAMENTO FACIAL BASEADO EM BLOCKCHAINS"
+authors:
+  - family-names: Marques Fernandes
+    given-names: Bernardo
+  - family-names: Miranda Ferreita Guimarães
+    given-names: Eric
+  - family-names: Lommez Cândido Ribeiro
+    given-names: Marcos Antônio
+  - family-names: de Moura Zandona Freitas
+    given-names: Saulo
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Manso Correa Machado
+    given-names: Alexei
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: de Lima Procopio Duarte
+    given-names: Fátima
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Cota de Freitas
+    given-names: Henrique
+keywords:
+  - blockchain
+  - reconhecimento facial
+repository-code: https://github.com/ICEI-PUC-Minas-CC-TI/plmg-cc-ti6-2024-2-g04-blockchain
+license: CC-BY-4.0
+version: 1.0.0
+date-released: 2024-11-29
