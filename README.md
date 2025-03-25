@@ -4,7 +4,9 @@ O projeto BlockFace é um sistema de detecção e monitoramento de rostos que en
 
 Para o reconhecimento facial, o sistema emprega dois modelos de IA. O YOLO é utilizado para detectar rostos nas imagens, enquanto o FaceNet, modelo pré-treinado do Google, realiza o reconhecimento e a identificação dos indivíduos. Foi realizado um fine-tuning do FaceNet com a base de dados QMUL-SurvFace, permitindo um desempenho otimizado para o contexto do projeto.
 
+
 ## Alunos integrantes da equipe
+
 
 * Bernardo Marques Fernandes
 * Eric Miranda Ferreita Guimarães
@@ -56,7 +58,11 @@ Abaixo estão listados os comandos disponíveis para interagir com o sistema da 
 | `start endpoint`     | Abre conexão para recebimento de informações dos serviços de câmera.            |
 | `exit`               | Sai da Nether Blockchain.                                                       |
 
+
+
+
 ### Para inicializar o algoritmo e a aplicação para as câmeras de segurança: 
 - streamlit run main.py
   obs.: precisa estar na pasta Codigo
 - Na aplicação, escolha a câmera a esquerda para iniciar a visualização
+

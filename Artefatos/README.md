@@ -1,0 +1,3 @@
+# Artefatos do projeto
+
+Tivemos apenas reuniões pontuais...

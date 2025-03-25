@@ -1,0 +1,8 @@
+requests
+torch
+torchvision
+Pillow
+opencv-python
+numpy
+deep_sort_realtime
+streamlit
